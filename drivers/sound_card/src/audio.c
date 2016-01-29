@@ -26,14 +26,14 @@ void Audio_Registe(void)
 #endif
 
 	//DAC pin
-	RCC_AHB1PeriphResetCmd(AUDIO_DAC_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(AUDIO_DAC_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = AUDIO_DAC_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(AUDIO_DAC_PORT, &GPIO_InitStructure);
 
 	//DAC
-	RCC_APB1PeriphResetCmd(AUDIO_DAC_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(AUDIO_DAC_CLK, ENABLE);
 	DAC_InitStructure.DAC_Trigger = DAC_Trigger_T6_TRGO;
 	DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
 	DAC_InitStructure.DAC_LFSRUnmask_TriangleAmplitude = DAC_LFSRUnmask_Bit0;
@@ -43,7 +43,7 @@ void Audio_Registe(void)
 	DAC_SetChannel1Data(DAC_Align_12b_R, 2010);
 
 	//DMA init
-	RCC_AHB1PeriphResetCmd(AUDIO_DAC_DMA_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(AUDIO_DAC_DMA_CLK, ENABLE);
 	DMA_DeInit(AUDIO_DAC_DMA_STERAM);	
 	DMA_InitStructure.DMA_Channel = AUDIO_DAC_DMA_CHANNEL;  
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&AUDIO_DAC->DHR12R1);
@@ -78,7 +78,7 @@ void Audio_Registe(void)
 	DAC_Cmd(AUDIO_DAC_CHANNEL, ENABLE);
 
 	//TIM6 init
-	RCC_APB1PeriphResetCmd(AUDIO_DAC_TIMER_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(AUDIO_DAC_TIMER_CLK, ENABLE);
 	TIM_TimeBaseInitStructure.TIM_Prescaler = 0;									//max speed
 	TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInitStructure.TIM_Period = (SystemCoreClock/2) / 100000 - 1;		// 10 uS, 100 kHz
@@ -91,7 +91,7 @@ void Audio_Registe(void)
 	TIM_Cmd(AUDIO_DAC_TIMER, ENABLE);
 	
 #if !defined(EEPROM)
-	RCC_AHB1PeriphResetCmd(IIC_EEPROM_SCL_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(IIC_EEPROM_SCL_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = IIC_EEPROM_SCL_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -100,7 +100,7 @@ void Audio_Registe(void)
 	GPIO_Init(IIC_EEPROM_SCL_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(IIC_EEPROM_SCL_PORT, IIC_EEPROM_SCL_PIN_SOURCE, IIC_EEPROM_SCL_GPIO_AF);
 
-	RCC_AHB1PeriphResetCmd(IIC_EEPROM_SDA_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(IIC_EEPROM_SDA_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = IIC_EEPROM_SDA_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -109,7 +109,7 @@ void Audio_Registe(void)
 	GPIO_Init(IIC_EEPROM_SDA_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(IIC_EEPROM_SDA_PORT, IIC_EEPROM_SDA_PIN_SOURCE, IIC_EEPROM_SDA_GPIO_AF);
 
-	RCC_APB1PeriphResetCmd(IIC_EEPROM_I2C_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(IIC_EEPROM_I2C_CLK, ENABLE);
 	I2C_InitStructure.I2C_ClockSpeed = IIC_EEPROM_SPEED;
 	I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
 	I2C_InitStructure.I2C_OwnAddress1 = 0x00;

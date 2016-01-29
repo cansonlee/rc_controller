@@ -117,7 +117,7 @@ INCDIRS  = -I./freertos/inc \
 		   -I./drivers/USARTs/inc \
 
 # The ld scripts
-LDSCRIPT = ./script/STM32F217IG_FLASH.ld
+LDSCRIPT = ./script/stm32_flash.ld
  
 # The executable file name.
 # If not specified, current directory name or `a.out' will be used.
@@ -195,7 +195,8 @@ LINK.cxx    = $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS)
  
 # Delete the default suffixes
 .SUFFIXES:
- 
+
+.SECONDARY: $(PROGRAM).elf  
 all: $(PROGRAM).hex
  
 # Rules for creating dependency files (.d).

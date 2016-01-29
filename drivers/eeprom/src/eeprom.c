@@ -17,7 +17,7 @@ void eepromInit(void)
 	I2C_InitTypeDef  I2C_InitStructure;
 
 	
-	RCC_AHB1PeriphResetCmd(IIC_EEPROM_WP_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(IIC_EEPROM_WP_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = IIC_EEPROM_WP_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -26,7 +26,7 @@ void eepromInit(void)
 	GPIO_Init(IIC_EEPROM_WP_PORT, &GPIO_InitStructure);
 	GPIO_ResetBits(IIC_EEPROM_WP_PORT, IIC_EEPROM_WP_PIN);
 
-  	RCC_AHB1PeriphResetCmd(IIC_EEPROM_SCL_GPIO_CLK, ENABLE);
+  	RCC_AHB1PeriphClockCmd(IIC_EEPROM_SCL_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = IIC_EEPROM_SCL_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -35,7 +35,7 @@ void eepromInit(void)
 	GPIO_Init(IIC_EEPROM_SCL_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(IIC_EEPROM_SCL_PORT, IIC_EEPROM_SCL_PIN_SOURCE, IIC_EEPROM_SCL_GPIO_AF);
 
-	RCC_AHB1PeriphResetCmd(IIC_EEPROM_SDA_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(IIC_EEPROM_SDA_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = IIC_EEPROM_SDA_PIN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -44,7 +44,7 @@ void eepromInit(void)
 	GPIO_Init(IIC_EEPROM_SDA_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(IIC_EEPROM_SDA_PORT, IIC_EEPROM_SDA_PIN_SOURCE, IIC_EEPROM_SDA_GPIO_AF);
 
-	RCC_APB1PeriphResetCmd(IIC_EEPROM_I2C_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(IIC_EEPROM_I2C_CLK, ENABLE);
 	I2C_InitStructure.I2C_ClockSpeed = IIC_EEPROM_SPEED;
 	I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
 	I2C_InitStructure.I2C_OwnAddress1 = 0x00;

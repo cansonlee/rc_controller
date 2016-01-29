@@ -147,70 +147,70 @@ void STICK_n_RATATE_Registe(void)
 
 	//GPIO init
 	//STICK RV
-	RCC_AHB1PeriphResetCmd(STICK_RV_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(STICK_RV_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = STICK_RV_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(STICK_RV_PORT, &GPIO_InitStructure);
 
 	//STICK RH
-	RCC_AHB1PeriphResetCmd(STICK_RH_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(STICK_RH_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = STICK_RH_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(STICK_RH_PORT, &GPIO_InitStructure);
 
 	//STICK LH
-	RCC_AHB1PeriphResetCmd(STICK_LH_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(STICK_LH_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = STICK_LH_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(STICK_LH_PORT, &GPIO_InitStructure);
 
 	//STICK LV
-	RCC_AHB1PeriphResetCmd(STICK_LV_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(STICK_LV_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = STICK_LV_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(STICK_LV_PORT, &GPIO_InitStructure);
 
 	//ROTATE_LU
-	RCC_AHB1PeriphResetCmd(ROTATE_LU_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(ROTATE_LU_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = ROTATE_LU_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(ROTATE_LU_PORT, &GPIO_InitStructure);
 
 	//ROTATE_LD
-	RCC_AHB1PeriphResetCmd(ROTATE_LD_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(ROTATE_LD_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = ROTATE_LD_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(ROTATE_LD_PORT, &GPIO_InitStructure);
 
 	//ROTATE_RU
-	RCC_AHB1PeriphResetCmd(ROTATE_RU_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(ROTATE_RU_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = ROTATE_RU_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(ROTATE_RU_PORT, &GPIO_InitStructure);
 
 	//ROTATE_RD
-	RCC_AHB1PeriphResetCmd(ROTATE_RD_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(ROTATE_RD_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = ROTATE_RD_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(ROTATE_RD_PORT, &GPIO_InitStructure);
 
 	//MONITOR_VOL
-	RCC_AHB1PeriphResetCmd(MONITOR_VOL_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(MONITOR_VOL_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = MONITOR_VOL_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	GPIO_Init(MONITOR_VOL_PORT, &GPIO_InitStructure);
 
 	//--------------ADC init---------------------------------
-	RCC_AHB2PeriphResetCmd(SKYBORNE_ADC_CLK, ENABLE);
+	RCC_APB2PeriphClockCmd(SKYBORNE_ADC_CLK, ENABLE);
 	ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
 	ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
 	ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
@@ -238,7 +238,7 @@ void STICK_n_RATATE_Registe(void)
 	ADC_RegularChannelConfig(SKYBORNE_ADC, MONITOR_VOL_ADC_CHANNEL, MONITOR_VOL+1, ADC_SampleTime_28Cycles);
 
 	//DMA init
-	RCC_AHB1PeriphResetCmd(SKYBORNE_ADC_DMA_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SKYBORNE_ADC_DMA_CLK, ENABLE);
 	DMA_DeInit(SKYBORNE_ADC_DMA_STREAM);	
 	DMA_InitStructure.DMA_Channel = SKYBORNE_ADC_DMA_CHANNEL;  
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&SKYBORNE_ADC->DR);

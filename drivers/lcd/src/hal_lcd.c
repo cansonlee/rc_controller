@@ -27,7 +27,7 @@ void LCD_Registe(void)
 	NVIC_InitTypeDef NVIC_InitStructure;
 
 	//±³¹â¿ØÖÆ
-	RCC_AHB1PeriphResetCmd(LCD_BLW_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_BLW_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_BLW_PIN |LCD_BL_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -36,7 +36,7 @@ void LCD_Registe(void)
 	GPIO_Init(LCD_BLW_PORT, &GPIO_InitStructure);
 
 	//SPI¿ÚÅäÖÃ
-	RCC_AHB1PeriphResetCmd(LCD_SPI_CLK_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_SPI_CLK_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_SPI_CLK_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -45,7 +45,7 @@ void LCD_Registe(void)
 	GPIO_Init(LCD_SPI_CLK_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(LCD_SPI_CLK_PORT, LCD_SPI_CLK_PIN_SOURCE, LCD_SPI_CLK_GPIO_AF);
 
-	RCC_AHB1PeriphResetCmd(LCD_SPI_MOSI_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_SPI_MOSI_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_SPI_MOSI_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -54,7 +54,7 @@ void LCD_Registe(void)
 	GPIO_Init(LCD_SPI_MOSI_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(LCD_SPI_MOSI_PORT, LCD_SPI_MOSI_PIN_SOURCE, LCD_SPI_MOSI_GPIO_AF);
 
-	RCC_AHB1PeriphResetCmd(LCD_SPI_NCS_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_SPI_NCS_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_SPI_NCS_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -64,7 +64,7 @@ void LCD_Registe(void)
 	GPIO_PinAFConfig(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN_SOURCE, LCD_SPI_NCS_GPIO_AF);
 
 	//A0¶Ë¿ÚÅäÖÃ
-	RCC_AHB1PeriphResetCmd(LCD_A0_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_A0_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_A0_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -73,7 +73,7 @@ void LCD_Registe(void)
 	GPIO_Init(LCD_A0_PORT, &GPIO_InitStructure);
 
 	//RST¶Ë¿ÚÅäÖÃ	
-	RCC_AHB1PeriphResetCmd(LCD_RST_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_RST_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_RST_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -82,7 +82,7 @@ void LCD_Registe(void)
 	GPIO_Init(LCD_RST_PORT, &GPIO_InitStructure);
 
 	//SPI¹¦ÄÜÅäÖÃ
-	RCC_APB1PeriphResetCmd(LCD_SPI_MASTER_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(LCD_SPI_MASTER_CLK, ENABLE);
 	/* SPI_MASTER configuration ------------------------------------------------------*/
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
@@ -99,7 +99,7 @@ void LCD_Registe(void)
 	/* Enable SPI_MASTER NSS output for master mode */
 	SPI_SSOutputCmd(LCD_SPI_MASTER, ENABLE);
 	/* Enable SPI_MASTER DMA TX */
-	RCC_APB1PeriphResetCmd(LCD_DMA_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(LCD_DMA_CLK, ENABLE);
 	DMA_DeInit(LCD_DMA_STREAM);
 	DMA_InitStructure.DMA_Channel = LCD_DMA_CHANNLE;
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)LCD_SPI_MASTER->DR;

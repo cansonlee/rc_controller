@@ -27,7 +27,7 @@ void UARTS_Registe(void)
 	uint32_t            temp;
 
 	//USART_S_PORT_TxPin
-	RCC_AHB1PeriphResetCmd(USART_S_PORT_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(USART_S_PORT_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = USART_S_PORT_TxPin ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -44,7 +44,7 @@ void UARTS_Registe(void)
 	GPIO_PinAFConfig(USART_S_PORT_GPIO, USART_S_PORT_Rx_Pinsource, USART_S_PORT_GPIO_AF);
 
 	//USARTdbg_TxPin
-	RCC_AHB1PeriphResetCmd(USARTdbg_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(USARTdbg_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = USARTdbg_TxPin ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -66,7 +66,7 @@ void UARTS_Registe(void)
 	RCC_APB1PeriphClockCmd(USART_S_PORT_CLK, ENABLE); 
 	//串口发DMA配置  
 	//启动DMA时钟
-	RCC_APB1PeriphResetCmd(USART_S_PORT_DMA_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(USART_S_PORT_DMA_CLK, ENABLE);
 
 	//DMA1通道配置
 	//关闭通道

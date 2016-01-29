@@ -15,7 +15,7 @@ void HAPTIC_Registe(void)
 	TIM_TimeBaseInitTypeDef		TIM_TimeBaseInitStructure;
 	TIM_OCInitTypeDef			TIM_OCInitStructure;
 
-	RCC_AHB1PeriphResetCmd(HAPTIC_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(HAPTIC_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = HAPTIC_PIN ;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -24,7 +24,7 @@ void HAPTIC_Registe(void)
 	GPIO_Init(HAPTIC_PORT, &GPIO_InitStructure);
 	GPIO_PinAFConfig(HAPTIC_PORT, HAPTIC_PIN_SOURCE, HAPTIC_GPIO_AF);
 
-	RCC_APB2PeriphResetCmd(HAPTIC_TIMER_CLK, ENABLE);
+	RCC_APB2PeriphClockCmd(HAPTIC_TIMER_CLK, ENABLE);
 	TIM_TimeBaseInitStructure.TIM_Prescaler = SystemCoreClock / 10000 - 1;
 	TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInitStructure.TIM_Period = 100;	
