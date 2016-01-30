@@ -22,13 +22,13 @@
 
 #define	USART_S_PORT_DMA_CLK		   RCC_AHB1Periph_DMA1
 #define USART_S_PORT_Tx_DMA_STREAM	   DMA1_Stream6
-#define USART_S_PORT_Tx_DMA_Channel    DMA1_Channel4
+#define USART_S_PORT_Tx_DMA_Channel    DMA_Channel_4
 #define USART_S_PORT_Tx_DMA_FLAG       DMA_IT_TCIF4   
 #define USART_S_PORT_Tx_DMA_IRQn       DMA1_Stream6_IRQn 
 #define USART_S_PORT_Tx_DMA_NVIC_PRIORITY	configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 3
 
 #define USART_S_PORT_Rx_DMA_STREAM	   DMA1_Stream5
-#define USART_S_PORT_Rx_DMA_Channel    DMA1_Channel4
+#define USART_S_PORT_Rx_DMA_Channel    DMA_Channel_4
 #define USART_S_PORT_Rx_DMA_FLAG       DMA_IT_TCIF4    
 #define USART_S_PORT_Rx_DMA_IRQn       DMA1_Stream5_IRQn  
 #define USART_S_PORT_IRQn              USART2_IRQn
@@ -48,22 +48,24 @@
 
 #define	USARTdbg_DMA_CLK		   		RCC_AHB1Periph_DMA1
 #define USARTdbg_Tx_DMA_STREAM			DMA1_Stream3
-#define USARTdbg_Tx_DMA_Channel    		DMA1_Channel4
+#define USARTdbg_Tx_DMA_Channel    		DMA_Channel_4
 #define USARTdbg_Tx_DMA_FLAG       		DMA_IT_TCIF4   
 #define USARTdbg_Tx_DMA_IRQn       		DMA1_Stream3_IRQn
 #define USARTdbg_Tx_DMA_NVIC_PRIORITY	configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 5
 
 #define USARTdbg_Rx_DMA_STREAM			DMA1_Stream1
-#define USARTdbg_Rx_DMA_Channel    		DMA1_Channel4
+#define USARTdbg_Rx_DMA_Channel    		DMA_Channel_4
 #define USARTdbg_Rx_DMA_FLAG       		DMA_IT_TCIF4  
 #define USARTdbg_Rx_DMA_IRQn       		DMA1_Stream1_IRQn  
 #define USARTdbg_IRQn              		USART3_IRQn
+#define USARTdbg_Rx_NVIC_PRIORITY		configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 6
 
 
 #define	S_PORT_TX_BUFF_LEN				200
 #define S_PORT_RX_BUFF_LEN				200
 
 #define DBG_TX_BUF_LEN					300
+#define DBG_RX_BUF_LEN					300
 
 
 
@@ -73,5 +75,7 @@ void USART_S_PORT_Tx_DMA_IRQHandler_Callback(void);
 void USART_S_PORT_IRQHandler_Callback(void);
 uint8_t USARTdbg_send(uint8_t *Str, uint16_t len);
 void USARTdbg_Tx_DMA_IRQHandler_Callback(void);
+void USARTdbg_IRQHandler_Callback(void);
+
 
 #endif

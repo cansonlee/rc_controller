@@ -1,10 +1,17 @@
 #include "display.h"
 #include "global.h"
+#include "font.h"
+
 
 void Task_disp(void const * argument)
 {
-	//²Ëµ¥µ÷¶ÈÆ÷
+	dispCharacter(0,0,"H");
+	
+	dispCharStr(0,16,"Hello world!");
 
+	while(1)
+	{
+	}
 }
 
 

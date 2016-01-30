@@ -148,14 +148,14 @@
 
 
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
-#define PLL_M      25
+#define PLL_M      8	//25
 #define PLL_N      240
 
 /* SYSCLK = PLL_VCO / PLL_P */
 #define PLL_P      2
 
 /* USB OTG FS, SDIO and RNG Clock =  PLL_VCO / PLLQ */
-#define PLL_Q      5
+#define PLL_Q      4	//5
 
 /**
   * @}

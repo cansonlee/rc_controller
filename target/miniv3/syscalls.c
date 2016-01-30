@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 
+#include "usarts.h"
+
 #undef errno
 extern int errno;
 extern int  _end;
@@ -61,7 +63,7 @@ int _read(int file, char *ptr, int len)
 
 int _write(int file, char *ptr, int len) 
 {
-    uart1_send(ptr, len);
+    USARTdbg_send(ptr, len);
 
     return len;
 }

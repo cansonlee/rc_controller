@@ -108,9 +108,29 @@ void EXTI4_IRQHandler(void)
     
 }
 
+void DMA1_Stream3_IRQHandler(void)
+{
+	USARTdbg_Tx_DMA_IRQHandler_Callback();
+}
+
+void DMA1_Stream6_IRQHandler(void)
+{
+	USART_S_PORT_Tx_DMA_IRQHandler_Callback();
+}
+
 void ADC_IRQHandler(void)
 {
 	
+}
+
+void USART2_IRQHandler(void)
+{
+	USART_S_PORT_IRQHandler_Callback();
+}
+
+void USART3_IRQHandler(void)
+{
+	USARTdbg_IRQHandler_Callback();
 }
 
 void DMA1_Stream7_IRQHandler(void)
@@ -122,6 +142,10 @@ void DMA2_Stream0_IRQHandler(void)
 {
 	SKYBORNE_ADC_DMA_IRQHandlerCallback();
 }
+
+
+
+
 
 
 /* USER CODE END 1 */

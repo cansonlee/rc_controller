@@ -34,11 +34,15 @@ osSemaphoreId	xSemaphore_ForADCs;
 ///////////////////函数声明/////////////////////////////////
 void system_config(void);
 void _init (void);
+//void USARTdbg_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len);
 
 
 void main(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
+	USART_InitTypeDef   USART_InitStructure;
+	uint8_t i;
+	RCC_ClocksTypeDef	rcc_clk;
 	
 	system_config();	
 
@@ -47,10 +51,57 @@ void main(void)
 //	HAPTIC_init();
 //	keys_n_ADCs_init();
 //	LCD_Init();
-//	UARTS_init();
+	UARTS_init();
+#if 0
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_MCO);
+	RCC_MCO2Config(RCC_MCO2Source_SYSCLK, RCC_MCO2Div_2);
+
+
+
+
+	//USARTdbg_TxPin
+	RCC_AHB1PeriphClockCmd(USARTdbg_GPIO_CLK, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = USARTdbg_TxPin ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+	GPIO_Init(USARTdbg_GPIO, &GPIO_InitStructure);
+	GPIO_PinAFConfig(USARTdbg_GPIO, USARTdbg_Tx_Pinsource, USARTdbg_GPIO_AF);
+
+	//USARTdbg_RxPin
+	GPIO_InitStructure.GPIO_Pin = USARTdbg_RxPin ;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+	GPIO_Init(USARTdbg_GPIO, &GPIO_InitStructure);
+	GPIO_PinAFConfig(USARTdbg_GPIO, USARTdbg_Rx_Pinsource, USARTdbg_GPIO_AF);
+
+	//打开串口对应的外设时钟  
+	RCC_APB1PeriphClockCmd(USARTdbg_CLK, ENABLE); 
+	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	//初始化串口 
+	USART_Init(USARTdbg,&USART_InitStructure); 
+	//启动串口  
+	USART_Cmd(USARTdbg, ENABLE); 
+#endif
+
+	RCC_GetClocksFreq(&rcc_clk);
+
+	
 
 	//背光控制
-//	RCC_AHB1PeriphResetCmd(LCD_BLW_GPIO_CLK, ENABLE);
 	RCC_AHB1PeriphClockCmd(LCD_BLW_GPIO_CLK, ENABLE);	
 	GPIO_InitStructure.GPIO_Pin = LCD_BLW_PIN |LCD_BL_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -62,12 +113,13 @@ void main(void)
 	//背光开启
 	GPIO_SetBits(LCD_BL_PORT, LCD_BL_PIN);
 	GPIO_SetBits(LCD_BLW_PORT, LCD_BLW_PIN);
-	
+
+	printf("rcc_clk: %d %d %d %d \r\n", rcc_clk.SYSCLK_Frequency, rcc_clk.HCLK_Frequency, rcc_clk.PCLK1_Frequency, rcc_clk.PCLK2_Frequency);
 
 	/* Create the thread(s) */
     /* definition and creation of commTask */
-    osThreadDef(commTask, Task_comm, osPriorityNormal, 0, 1024);
-    Task_commHandle = osThreadCreate(osThread(commTask), NULL);
+//    osThreadDef(commTask, Task_comm, osPriorityNormal, 0, 1024);
+//    Task_commHandle = osThreadCreate(osThread(commTask), NULL);
 
 //	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
 //    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
@@ -99,7 +151,7 @@ void main(void)
 
     //printf("tasks hava created, os starting ...\r\n");
     /* Start scheduler */
-    osKernelStart();
+//    osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
     //printf("scheduler has been started ...\r\n");
@@ -125,6 +177,7 @@ void main(void)
 void system_config(void)
 {
 	SystemInit();
+	
 	/* Enable Prefetch Buffer */
 	FLASH_PrefetchBufferCmd(ENABLE);
 
@@ -146,6 +199,17 @@ void _init (void)
   
 }
 
+
+void USART_S_PORT_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len)
+{
+
+}
+
+
+void USARTdbg_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len)
+{
+	USARTdbg_send(msg, len);
+}
 
 
 
