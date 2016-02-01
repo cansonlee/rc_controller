@@ -37,7 +37,8 @@
 #include "cmsis_os.h"
 #include "hal_lcd.h"
 #include "delay_timer.h"
-#include "keys_n_ADCs.h"
+#include "ana_inputs.h"
+
 
 
 /* USER CODE BEGIN 0 */
@@ -135,12 +136,12 @@ void USART3_IRQHandler(void)
 
 void DMA1_Stream7_IRQHandler(void)
 {
-	LCD_DMA_IRQHandlerCallback();
+	lcd_dma_irq_handler_callback();
 }
 
 void DMA2_Stream0_IRQHandler(void)
 {
-	SKYBORNE_ADC_DMA_IRQHandlerCallback();
+	ana_inputs_adc_dma_irq_handler_callback();
 }
 
 

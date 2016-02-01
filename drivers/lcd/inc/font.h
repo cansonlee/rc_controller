@@ -11,10 +11,4 @@ typedef struct
 }LittleCharStruct;
 
 
-
-void dispCharacter(uint8_t x,uint8_t y,uint8_t dispByte);
-void dispCharStr(unsigned char x,unsigned char y,unsigned char *pCharStr);
-
-
-
 #endif

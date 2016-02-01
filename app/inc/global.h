@@ -2,7 +2,9 @@
 #define __GLOBAL_H
 
 #include "cmsis_os.h"
-
+#include "keys.h"
+#include "switches.h"
+#include "ana_inputs.h"
 
 
 extern osThreadId 		Task_commHandle;
@@ -36,5 +38,21 @@ typedef struct
 }MSG_QUEUE_t;
 
 
+typedef struct
+{
+	uint16_t					switchs;	//combination of SLSW_SA_MASK to SLSW_SE_MASK
+	uint16_t					logic;		//AND / OR
+	MISC_SLIDE_SWITCH_VALUE		value;	
+}MIXER_CHANNEL_MODE_t;
+
+typedef struct
+{
+	MIXER_CHANNEL_MODE_t	Mixer_Mode_L1;
+	MIXER_CHANNEL_MODE_t	Mixer_Mode_L2;
+	MIXER_CHANNEL_MODE_t	Mixer_Mode_L3;
+	MIXER_CHANNEL_MODE_t	Mixer_Mode_L4;
+	MIXER_CHANNEL_MODE_t	Mixer_Mode_L5;
+	MIXER_CHANNEL_MODE_t	Mixer_Mode_L6;
+}MIXER_LANDING_MODE_t;
 
 #endif

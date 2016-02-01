@@ -28,7 +28,8 @@ osSemaphoreId	xSemaphore_ForComm;
 osSemaphoreId	xSemaphore_ForADCs;
 
 
-
+uint8_t		dbg_Buffer[DBG_TX_BUF_LEN];
+uint16_t	dbg_recv_len;
 
 
 ///////////////////º¯ÊýÉùÃ÷/////////////////////////////////
@@ -49,8 +50,8 @@ void main(void)
 //	eepromInit();
 //	Audio_init();
 //	HAPTIC_init();
-//	keys_n_ADCs_init();
-//	LCD_Init();
+	keys_n_ADCs_init();
+	LCD_Init();
 	UARTS_init();
 #if 0
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
@@ -116,6 +117,12 @@ void main(void)
 
 	printf("rcc_clk: %d %d %d %d \r\n", rcc_clk.SYSCLK_Frequency, rcc_clk.HCLK_Frequency, rcc_clk.PCLK1_Frequency, rcc_clk.PCLK2_Frequency);
 
+	printf("test\r\n");
+
+	printf("USARTdbg->CR1=%x, USARTdbg->CR2=%x, USARTdbg->CR3=%x \r\n",USARTdbg->CR1, USARTdbg->CR2, USARTdbg->CR3);
+
+	printf("test again!\r\n");
+
 	/* Create the thread(s) */
     /* definition and creation of commTask */
 //    osThreadDef(commTask, Task_comm, osPriorityNormal, 0, 1024);
@@ -160,7 +167,11 @@ void main(void)
     /* Infinite loop */
     while (1)
     {
-        
+        if(dbg_recv_len != 0)
+    	{
+    		USARTdbg_send(dbg_Buffer, dbg_recv_len);
+    		dbg_recv_len = 0;
+    	}
     }
     /* USER CODE END 3 */
 
@@ -208,7 +219,8 @@ void USART_S_PORT_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len)
 
 void USARTdbg_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len)
 {
-	USARTdbg_send(msg, len);
+	memcpy(dbg_Buffer, msg, len);
+	dbg_recv_len = len;
 }
 
 

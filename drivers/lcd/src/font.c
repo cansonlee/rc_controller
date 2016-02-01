@@ -1,5 +1,4 @@
 #include "font.h"
-#include "hal_lcd.h"
 
 
 LittleCharStruct LittleCharLib[]=
@@ -86,72 +85,5 @@ LittleCharStruct LittleCharLib[]=
 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,				// 结束标志
 };
 
-
-
-/***************************************************************************************************
- * @fn      dispCharacter
- *
- * @brief   液晶显示一个字符
- * @param   x,y -- 液晶坐标
- *			dispByte -- 要显示的数据
- * @return  null
- ***************************************************************************************************/ 
-
-void dispCharacter(uint8_t x,uint8_t y,uint8_t dispByte)
-{
-	uint8_t i,j,k,m;
-	uint8_t  s_cFlag;												// 字符找到标志
-	uint8_t *pDispBuff;
-	i = 0;
-	m = 0;
-	s_cFlag = 0;
-
-	pDispBuff = &lcdTxBuff[y][x];
-	do
-	{
-		if(LittleCharLib[i].Index[0] == dispByte)					// 扫描相符字符
-		{
-			s_cFlag = 1;
-			for(j=0;j<2;j++)															// 写2页*8列数据
-			{
-				for(k=0;k<8;k++)
-				{
-					LCD_SetCursorAddr(x+k,y+j);
-					LCD_WriteData(LittleCharLib[i].Mask[m]);
-					*pDispBuff = LittleCharLib[i].Mask[m];
-					m++;
-					pDispBuff++;
-				}
-				pDispBuff = &lcdTxBuff[y+1][x];
-			}
-		}
-		i++;
-	}while( s_cFlag != 1 && LittleCharLib[i].Index[0] != 0xFF);		// 未找到字符或未扫描结束则继续
-}
-
-
-/***************************************************************************************************
- * @fn      dispCharStr
- *
- * @brief   液晶显示段连续字符
- * @param   x,y -- 液晶坐标
- *			pCharStr -- 要显示的字符串
- * @return  null
- ***************************************************************************************************/ 
-
-void dispCharStr(unsigned char x,unsigned char y,unsigned char *pCharStr)
-{
-	while(*pCharStr)
-	{
-		dispCharacter(x,y,*pCharStr);
-		x+=8;
-		if(x>=(LCD_W-1))													// 写满自动跳转下一行
-			{
-				x = 0;
-				y += 1;
-			}
-		pCharStr++;
-	}
-}
 
 //////////////end of file/////////////////////////////////////////////////////

@@ -264,7 +264,7 @@ void UARTS_Registe(void)
 
 	//中断配置
 	USART_ITConfig(USARTdbg,USART_IT_TC,DISABLE);  
-	USART_ITConfig(USARTdbg,USART_IT_RXNE,ENABLE);
+	USART_ITConfig(USARTdbg,USART_IT_RXNE,DISABLE);
 	USART_ITConfig(USARTdbg,USART_IT_IDLE,ENABLE);
 
 	USART_ClearITPendingBit(USARTdbg, USART_IT_RXNE);
@@ -448,7 +448,14 @@ void USARTdbg_IRQHandler_Callback(void)
 	uint32_t temp = 0;
 	uint16_t len = 0;
 
-	printf("enter usart3 interrupt!\r\n");
+	//printf("enter usart3 interrupt!\r\n");
+
+	if(USART_GetITStatus(USARTdbg, USART_IT_RXNE) != RESET)
+	{
+		USART_ClearITPendingBit(USARTdbg, USART_IT_RXNE);
+		//printf("enter usart3 RXNE interrupt!\r\n");
+		//printf("receive value is %c \r\n", USARTdbg->DR);
+	}
 	
 	if(USART_GetITStatus(USARTdbg, USART_IT_IDLE) != RESET)
 	{
@@ -458,14 +465,14 @@ void USARTdbg_IRQHandler_Callback(void)
 		temp = USARTdbg->DR; //清USART_IT_IDLE标志  
 		temp = temp;
 
-		printf("enter usart3 idle interrupt!\r\n");
+		//printf("enter usart3 idle interrupt!\r\n");
 
 		//接收字节数
 		len = DBG_RX_BUF_LEN - DMA_GetCurrDataCounter(USARTdbg_Rx_DMA_STREAM);
 
 		USARTdbg_IRQHandler_CallbackHook(dbg_RxBuffer, len);
 
-		printf("receive msg len is %d \r\n", len);
+		//printf("receive msg len is %d \r\n", len);
 
 		//设置传输数据长度
 		DMA_SetCurrDataCounter(USARTdbg_Rx_DMA_STREAM,DBG_RX_BUF_LEN);
