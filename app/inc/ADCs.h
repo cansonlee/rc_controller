@@ -1,7 +1,7 @@
 #ifndef __ADCS_H
 #define __ADCS_H
 
-#include "keys_n_ADCs.h"
+
 #include "global.h"
 #include "stm32f2xx_flash.h"
 
@@ -52,7 +52,7 @@ typedef enum
 typedef struct
 {
 	uint16_t					adcs[ADC_MODULE_NUMBER];		//包含电压值
-	MISC_SLIDE_SWITCH_VALUE		SLSW;						//各拨档开关值	
+	MISC_SW_VALUE		        SW;						        //各拨档开关值	
 }ALL_STICK_INPUT_t;
 
 void Task_ADCs(void const * argument);

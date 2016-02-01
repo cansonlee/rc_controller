@@ -74,6 +74,7 @@ void Task_ADCs(void const * argument)
 		//参数计算
 		for(i=0; i<(ADC_MODULE_NUMBER-1); i++)
 		{
+#if 0		
 			if(i <= STICK_LV)
 			{
 				 calibrate_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
@@ -85,11 +86,12 @@ void Task_ADCs(void const * argument)
 							  (g_Param_To_Store.ADCs_Calibrate_value[i].MidValue - g_Param_To_Store.ADCs_Calibrate_value[i].LowValue)/2,
 							   g_Param_To_Store.ADCs_Calibrate_value[i].LowValue);
 			}
+#endif            
 			
 		}
 
 		//拨档开关采集
-		misc_slide_value = Misc_Slide_Switch_Read();
+		g_misc_sli_sw_value = switches_misc_sw_read();
 
 		//分配通道
 		
@@ -118,14 +120,16 @@ void Task_ADCs(void const * argument)
 *          len 长度
 * @return  null
 ***************************************************************************************************/ 
-void SKYBORNE_ADC_DMA_IRQHandlerCallbackHook(uint16_t *adcs_value, uint8_t len)
+void ana_inputs_adc_dma_irq_handler_cb_hook(uint16_t *adcs_value, uint8_t len)
 {
 	MSG_QUEUE_t msg;
+	portBASE_TYPE taskWoken = pdFALSE;
 
 	msg.len = len;
 	memcpy(msg.msg, adcs_value, len);
 	//both ISR and Task
-	osMessagePut(xQueue_ToADCs, &msg, 0);
+	xQueueSendFromISR(xQueue_ToADCs, &msg, taskWoken);
+	portEND_SWITCHING_ISR(taskWoken);
 }
 
 /***************************************************************************************************
@@ -200,7 +204,7 @@ int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uin
 	y3 = calibHighValue;
 
 
-	*pGet = 
+	//*pGet = 
 	
 	return 0;
 }
@@ -232,7 +236,7 @@ int adc_mixer_set(MIXER_LANDING_MODE_t landingValue)
  ***************************************************************************************************/
 int adc_mixer_get(MIXER_LANDING_MODE_t *p_landingValue)
 {	
-	if(*p_landingValue == NULL)
+	if(p_landingValue == NULL)
 	{
 		return -1;
 	}
@@ -321,9 +325,9 @@ int adc_all_in_val_get(ALL_STICK_INPUT_t *stickValue)
 
 	portENTER_CRITICAL();
 	
-	memcpy(*stickValue->adcs,  g_gets_adcs_val, ADC_MODULE_NUMBER);
-			
-	*stickValue.SLSW = g_lastSlideSwVal;
+	memcpy(stickValue->adcs,  g_gets_adcs_val, ADC_MODULE_NUMBER);
+            
+	stickValue->SW.sws_value = g_lastSlideSwVal.sws_value;
 	
 	portEXIT_CRITICAL();
 

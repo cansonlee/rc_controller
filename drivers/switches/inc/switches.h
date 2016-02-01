@@ -96,20 +96,24 @@ typedef enum sw_val_e
 	SLIDE_DOWN
 }SW_VAL;
 
-typedef struct misc_sw_value_s
+typedef union misc_sw_val_e
 {
-	uint16_t SA : 2;
-	uint16_t SB : 2;
-	uint16_t SC : 2;
-	uint16_t SD : 2;
-	uint16_t SE : 2;
-	uint16_t RES: 6;
+    uint16_t sws_value;
+    struct misc_sw_value_s
+    {
+    	uint16_t SA : 2;
+    	uint16_t SB : 2;
+    	uint16_t SC : 2;
+    	uint16_t SD : 2;
+    	uint16_t SE : 2;
+    	uint16_t RES: 6;
+    }SWS;
 }MISC_SW_VALUE;
 
 
 //-------------º¯ÊýÉùÃ÷---------------------------
 
 void swithes_init(void);
-MISC_SLIDE_SWITCH_VALUE switches_misc_sw_read(void);
+MISC_SW_VALUE switches_misc_sw_read(void);
 
 #endif

@@ -42,7 +42,7 @@ typedef struct
 {
 	uint16_t					switchs;	//combination of SLSW_SA_MASK to SLSW_SE_MASK
 	uint16_t					logic;		//AND / OR
-	MISC_SLIDE_SWITCH_VALUE		value;	
+	MISC_SW_VALUE		        value;	
 }MIXER_CHANNEL_MODE_t;
 
 typedef struct

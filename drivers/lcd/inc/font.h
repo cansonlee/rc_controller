@@ -11,4 +11,6 @@ typedef struct
 }LittleCharStruct;
 
 
+extern LittleCharStruct LittleCharLib[];
+
 #endif

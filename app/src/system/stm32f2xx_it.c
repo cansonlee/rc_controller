@@ -35,7 +35,7 @@
 #include "stm32f2xx.h"
 #include "stm32f2xx_it.h"
 #include "cmsis_os.h"
-#include "hal_lcd.h"
+#include "lcd.h"
 #include "delay_timer.h"
 #include "ana_inputs.h"
 

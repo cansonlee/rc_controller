@@ -104,7 +104,7 @@ void swithes_init(void)
  ***************************************************************************************************/	
 MISC_SW_VALUE switches_misc_sw_read(void)
 {
-	uint16 misc_slide_switch;
+	uint16_t misc_slide_switch;
 
 	//SA
 	if(GPIO_ReadInputDataBit(SW_SA_H_PORT, SW_SA_H_PIN) == RESET)

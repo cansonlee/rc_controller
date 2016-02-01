@@ -1,9 +1,8 @@
 #include "cmsis_os.h"
-#include "keys_n_ADCs.h"
 #include "delay_timer.h"
 #include "haptic.h"
 #include "eeprom.h"
-#include "hal_lcd.h"
+#include "lcd.h"
 #include "font.h"
 #include "audio.h"
 #include "misc.h"
@@ -50,8 +49,8 @@ void main(void)
 //	eepromInit();
 //	Audio_init();
 //	HAPTIC_init();
-	keys_n_ADCs_init();
-	LCD_Init();
+//	keys_n_ADCs_init();
+//	LCD_Init();
 	UARTS_init();
 #if 0
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);

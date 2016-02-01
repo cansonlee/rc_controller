@@ -10,7 +10,7 @@
 uint8_t				g_LcdWriteBusyFlag;					//LCD写繁忙标志
 uint8_t				g_lcdTxBuff[LCD_H/8][LCD_W];			//LCD写缓存			
 
-
+int lcd_cursor_addr_set(uint8_t x, uint8_t y);
 
 /***************************************************************************************************
  * @fn      lcd_regist
@@ -233,7 +233,7 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
  * @param   x,y坐标
  * @return  0 -- success
  ***************************************************************************************************/ 
- int lcd_cursor_addr_set(uint8_t x, uint8_t y)
+int lcd_cursor_addr_set(uint8_t x, uint8_t y)
 {
 	lcd_cmd_write(x&0x0F);				//Set Column Address LSB CA[3:0]
   	lcd_cmd_write((x>>4)|0x10);			//Set Column Address MSB CA[7:4]
@@ -327,7 +327,7 @@ int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 			{
 				for(k=0;k<8;k++)
 				{
-					LCD_SetCursorAddr(x+k,y+j);
+					lcd_cursor_addr_set(x+k,y+j);
 					lcd_data_write(LittleCharLib[i].Mask[m]);
 					*pDispBuff = LittleCharLib[i].Mask[m];
 					m++;
@@ -397,7 +397,8 @@ int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t h
 	{
 		for(i=0; i<width; i++)
 		{
-			lcd_data_write(x+i,y+j,*p_bmp);
+			lcd_cursor_addr_set(x+i,y+j);
+			lcd_data_write(*p_bmp);
 			if((x+i)>(LCD_W-1))						// 写满一行报错
 			{
 				return -1;
@@ -436,7 +437,7 @@ int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 			{
 				for(k=0;k<8;k++)
 				{
-					LCD_SetCursorAddr(x+k,y+j);
+					lcd_cursor_addr_set(x+k,y+j);
 					lcd_data_write(~LittleCharLib[i].Mask[m]);
 					*pDispBuff = LittleCharLib[i].Mask[m];
 					m++;
@@ -508,7 +509,8 @@ int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8
 	{
 		for(i=0; i<width; i++)
 		{
-			lcd_data_write(x+i,y+j,~(*p_bmp));
+			lcd_cursor_addr_set(x+i,y+j);
+			lcd_data_write(~(*p_bmp));
 			if((x+i)>(LCD_W-1))						// 写满一行报错
 			{
 				return -1;
@@ -552,7 +554,8 @@ int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t hight)
 	{
 		for(i=0; i<width; i++)
 		{
-			lcd_data_write(x+i,y+j,0);
+			lcd_cursor_addr_set(x+i,y+j);
+			lcd_data_write(0);
 			if((x+i)>(LCD_W-1))						// 写满一行报错
 			{
 				return -1;
@@ -576,7 +579,7 @@ int lcd_clean(void)
 
 	memset(lcdSendBuff, 0, sizeof(lcdSendBuff));
 	
-	lcd_data_burst_write(lcdSendBuff, LCD_TX_BUFF_SIZE);
+	lcd_data_burst_write(&lcdSendBuff[0][0], LCD_TX_BUFF_SIZE);
 	
 	return 0;
 }

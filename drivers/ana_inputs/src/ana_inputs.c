@@ -121,7 +121,7 @@ void ana_inputs_regist(void)
 	DMA_DeInit(SKYBORNE_ADC_DMA_STREAM);	
 	DMA_InitStructure.DMA_Channel = SKYBORNE_ADC_DMA_CHANNEL;  
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&SKYBORNE_ADC->DR);
-	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)adcs_value;
+	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)g_adcs_value;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
 	DMA_InitStructure.DMA_BufferSize = ADC_MODULE_NUMBER;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
