@@ -52,8 +52,13 @@ void TIM3_IRQHandler(void);
 void TIM4_IRQHandler(void);
 void EXTI0_IRQHandler(void);
 void EXTI4_IRQHandler(void);
+void DMA1_Stream3_IRQHandler(void);
+void DMA1_Stream6_IRQHandler(void);
+void ADC_IRQHandler(void);
+void USART2_IRQHandler(void);
+void USART3_IRQHandler(void);
 void DMA1_Stream7_IRQHandler(void);
-
+void DMA2_Stream0_IRQHandler(void);
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -111,12 +116,12 @@ void EXTI4_IRQHandler(void)
 
 void DMA1_Stream3_IRQHandler(void)
 {
-	USARTdbg_Tx_DMA_IRQHandler_Callback();
+	uarts_dbg_tx_dma_irq_handler_callback();
 }
 
 void DMA1_Stream6_IRQHandler(void)
 {
-	USART_S_PORT_Tx_DMA_IRQHandler_Callback();
+	uarts_sport_tx_dma_irq_handler_callback();
 }
 
 void ADC_IRQHandler(void)
@@ -126,12 +131,12 @@ void ADC_IRQHandler(void)
 
 void USART2_IRQHandler(void)
 {
-	USART_S_PORT_IRQHandler_Callback();
+	uarts_sport_irq_handler_callback();
 }
 
 void USART3_IRQHandler(void)
 {
-	USARTdbg_IRQHandler_Callback();
+	uarts_dbg_irq_handler_callback();
 }
 
 void DMA1_Stream7_IRQHandler(void)

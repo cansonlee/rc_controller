@@ -18,6 +18,10 @@ void Task_comm(void const * argument)
 }
 
 
+void uarts_sport_irq_handler_cb_hook(uint8_t *msg, uint16_t len)
+{
+
+}
 
 
 //////////////end of file/////////////////////////////////////////////////////

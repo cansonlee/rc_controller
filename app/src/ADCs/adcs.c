@@ -36,7 +36,7 @@ MISC_SW_VALUE				g_lastSlideSwVal;									//其它任务获取各拨杆值缓存
 ///////////////////函数声明/////////////////////////////////
 Param_To_Store_t ReadFlash(uint32_t addr);
 void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len);
-uint16_t calibrate_calc(uint16_t curADC, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue);
+int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue);;
 
 
 
@@ -49,7 +49,10 @@ uint16_t calibrate_calc(uint16_t curADC, uint16_t calibHighValue, uint16_t calib
 ***************************************************************************************************/ 
 void Task_ADCs(void const * argument)
 {
-	uint8_t			 i;
+	uint8_t			        i;
+    uint8_t                 SetStickMaxMinFlag;
+    uint8_t                 LastSetStickMaxMinFlag;
+    MIXER_LANDING_MODE_t    LandingSetting;
 	
 	argument = argument;
 
@@ -71,36 +74,32 @@ void Task_ADCs(void const * argument)
 	{
 		xQueueReceive(xSemaphore_ForADCs, &g_adc_msg, portMAX_DELAY);
 
+        portENTER_CRITICAL();
+        LandingSetting = g_landingSetting;
+        SetStickMaxMinFlag = g_SetStickMaxMinFlag;
+        portEXIT_CRITICAL();
+        
 		//参数计算
 		for(i=0; i<(ADC_MODULE_NUMBER-1); i++)
-		{
-#if 0		
+		{		
 			if(i <= STICK_LV)
 			{
-				 calibrate_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
+				 adc_calib_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
 								g_Param_To_Store.ADCs_Calibrate_value[i].MidValue, g_Param_To_Store.ADCs_Calibrate_value[i].LowValue);
 			}
 			else
 			{
-				calibrate_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
+				adc_calib_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
 							  (g_Param_To_Store.ADCs_Calibrate_value[i].MidValue - g_Param_To_Store.ADCs_Calibrate_value[i].LowValue)/2,
 							   g_Param_To_Store.ADCs_Calibrate_value[i].LowValue);
-			}
-#endif            
-			
+			}		
 		}
 
 		//拨档开关采集
 		g_misc_sli_sw_value = switches_misc_sw_read();
 
 		//分配通道
-		
-
-		//发送Task_disp显示各拨杆值
-
-
-		//发送发射板
-
+        
 
 		/***********接收队列处理*************/
 		//Task_disp触发的舵及拨轮校正命令处理--按HighValue、MidValue、LowValue分别保存,读出
@@ -190,22 +189,22 @@ void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len)
  * @return  0 -- success
  *			-1 -- failure
  ***************************************************************************************************/
-
 int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue)
 {
-	int16_t x1,x2,x3,y1,y2,y3;
+	float x1,x2,x3,y1,y2,y3,y;
 
 	x1 = 0;
 	x2 = 2048;
 	x3 = 4096;
 
-	y1 = calibLowValue;
-	y2 = calibMidValue;
-	y3 = calibHighValue;
+	y1 = (float)calibLowValue;
+	y2 = (float)calibMidValue;
+	y3 = (float)calibHighValue;
 
+	y = y1*(((curADC-x2)*(curADC-x3))/((x1-x2)*(x1-x3))) + y2*(((curADC-x1)*(curADC-x3))/((x2-x1)*(x2-x3))) + y3*(((curADC-x1)*(curADC-x2))/((x3-x1)*(x3-x2)));
 
-	//*pGet = 
-	
+    *pGet = (uint16_t)y;
+    
 	return 0;
 }
 

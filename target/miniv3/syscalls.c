@@ -63,7 +63,7 @@ int _read(int file, char *ptr, int len)
 
 int _write(int file, char *ptr, int len) 
 {
-    USARTdbg_send(ptr, len);
+    uarts_dbg_send(ptr, len);
 
     return len;
 }
