@@ -38,14 +38,14 @@ typedef struct
 }MSG_QUEUE_t;
 
 
-typedef struct
+typedef struct mixer_chan_mode_s
 {
 	uint16_t					switchs;	//combination of SLSW_SA_MASK to SLSW_SE_MASK
 	uint16_t					logic;		//AND / OR
 	MISC_SW_VALUE		        value;	
 }MIXER_CHANNEL_MODE_t;
 
-typedef struct
+typedef struct mixer_l_chan_s
 {
 	MIXER_CHANNEL_MODE_t	Mixer_Mode_L1;
 	MIXER_CHANNEL_MODE_t	Mixer_Mode_L2;
@@ -54,5 +54,7 @@ typedef struct
 	MIXER_CHANNEL_MODE_t	Mixer_Mode_L5;
 	MIXER_CHANNEL_MODE_t	Mixer_Mode_L6;
 }MIXER_LANDING_MODE_t;
+
+
 
 #endif

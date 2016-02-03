@@ -51,7 +51,7 @@ void main(void)
 //	HAPTIC_init();
 //	keys_n_ADCs_init();
 //	LCD_Init();
-	UARTS_init();
+	uarts_init();
 #if 0
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
@@ -168,7 +168,7 @@ void main(void)
     {
         if(dbg_recv_len != 0)
     	{
-    		USARTdbg_send(dbg_Buffer, dbg_recv_len);
+    		uarts_dbg_send(dbg_Buffer, dbg_recv_len);
     		dbg_recv_len = 0;
     	}
     }
@@ -209,14 +209,7 @@ void _init (void)
   
 }
 
-
-void USART_S_PORT_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len)
-{
-
-}
-
-
-void USARTdbg_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len)
+void uarts_dbg_irq_handler_cb_hook(uint8_t *msg, uint16_t len)
 {
 	memcpy(dbg_Buffer, msg, len);
 	dbg_recv_len = len;

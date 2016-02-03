@@ -8,6 +8,8 @@
 #include "Stm32f2xx_rcc.h"
 #include "Stm32f2xx_dma.h"
 #include "cmsis_os.h"
+#include "driver_global.h"
+
 
 
 #define USART_S_PORT               	   USART2
@@ -69,13 +71,14 @@
 
 
 
-void UARTS_init(void);
-uint8_t USART_S_PORT_send(uint8_t *Str, uint8_t len);
-void USART_S_PORT_Tx_DMA_IRQHandler_Callback(void);
-void USART_S_PORT_IRQHandler_Callback(void);
-uint8_t USARTdbg_send(uint8_t *Str, uint16_t len);
-void USARTdbg_Tx_DMA_IRQHandler_Callback(void);
-void USARTdbg_IRQHandler_Callback(void);
+void uarts_init(void);
+int uarts_sport_send(uint8_t *Str, uint8_t len);
+void uarts_sport_tx_dma_irq_handler_callback(void);
+void uarts_sport_irq_handler_callback(void);
+int uarts_dbg_send(uint8_t *Str, uint16_t len);
+void uarts_dbg_tx_dma_irq_handler_callback(void);
+void uarts_dbg_irq_handler_callback(void);
+
 
 
 #endif

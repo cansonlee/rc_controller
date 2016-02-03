@@ -14,13 +14,13 @@ uint8_t		dbgWriteBusyFlag;					//调试口写繁忙标志
 
 
 /***************************************************************************************************
- * @fn      UARTS_Registe
+ * @fn      uarts_regist
  *
  * @brief   串口资源注册
  * @param   NULL
  * @return  null
  ***************************************************************************************************/  
-void UARTS_Registe(void)
+void uarts_regist(void)
 {
 	GPIO_InitTypeDef 	GPIO_InitStructure;
 	NVIC_InitTypeDef    NVIC_InitStructure;
@@ -296,33 +296,36 @@ void UARTS_Registe(void)
 
 
 /***************************************************************************************************
- * @fn      UARTS_init
+ * @fn      uarts_init
  *
  * @brief   串口资源初始化
  * @param   NULL
  * @return  null
  ***************************************************************************************************/  
-void UARTS_init(void)
+void uarts_init(void)
 {
-	UARTS_Registe();	
+	uarts_regist();	
 }
 
 
 /***************************************************************************************************
- * @fn      USART_S_PORT_send
+ * @fn      uarts_sport_send
  *
  * @brief   s-port串口发送
  * @param   str -- 发送数据
  *			len -- 数据长度
- * @return  null
+ * @return  0 -- success
+ *          -1 - failure
+ *          1 -- busy
  ***************************************************************************************************/  
-uint8_t USART_S_PORT_send(uint8_t *Str, uint8_t len)
+int uarts_sport_send(uint8_t *Str, uint8_t len)
 {
+    IF_PTR_IS_NULL_RET_NULLPTR_ERR(Str);
 	if(len > S_PORT_TX_BUFF_LEN)
-		return 0;
+		return -1;
 
 	if(sPortWriteBusyFlag)
-		return 0;
+		return 1;
 
 	sPortWriteBusyFlag = 1;	
 
@@ -332,18 +335,18 @@ uint8_t USART_S_PORT_send(uint8_t *Str, uint8_t len)
 	USART_DMACmd(USART_S_PORT,USART_DMAReq_Tx,ENABLE);
 	DMA_Cmd(USART_S_PORT_Tx_DMA_STREAM,ENABLE);
 
-	return 1;
+	return 0;
 }
 
 
 /***************************************************************************************************
- * @fn      USART_S_PORT_Tx_DMA_IRQHandler_Callback
+ * @fn      uarts_sport_tx_dma_irq_handler_callback
  *
  * @brief   s-port串口DMA发送中断回调
  * @param   null
  * @return  null
  ***************************************************************************************************/  
-void USART_S_PORT_Tx_DMA_IRQHandler_Callback(void)
+void uarts_sport_tx_dma_irq_handler_callback(void)
 {
 	if(DMA_GetITStatus(USART_S_PORT_Tx_DMA_STREAM, USART_S_PORT_Tx_DMA_FLAG) != RESET)
 	{
@@ -355,17 +358,18 @@ void USART_S_PORT_Tx_DMA_IRQHandler_Callback(void)
 }
 
 /***************************************************************************************************
- * @fn      USART_S_PORT_IRQHandler_Callback
+ * @fn      uarts_sport_irq_handler_callback
  *
  * @brief   s-port串口中断回调
  * @param   null
  * @return  null
  ***************************************************************************************************/ 
-extern void USART_S_PORT_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len);
-void USART_S_PORT_IRQHandler_Callback(void)
+extern void uarts_sport_irq_handler_cb_hook(uint8_t *msg, uint16_t len);
+void uarts_sport_irq_handler_callback(void)
 {
 	uint32_t temp = 0;
 	uint16_t len = 0;
+    uint8_t  RxBuffer[S_PORT_RX_BUFF_LEN];
 
 	if(USART_GetITStatus(USART_S_PORT, USART_IT_IDLE) != RESET)
 	{
@@ -378,31 +382,37 @@ void USART_S_PORT_IRQHandler_Callback(void)
 		//接收字节数
 		len = S_PORT_RX_BUFF_LEN - DMA_GetCurrDataCounter(USART_S_PORT_Rx_DMA_STREAM);
 
-		USART_S_PORT_IRQHandler_CallbackHook(Sport_RxBuffer, len);
+        memcpy(RxBuffer, Sport_RxBuffer, len);
 
 		//设置传输数据长度
 		DMA_SetCurrDataCounter(USART_S_PORT_Rx_DMA_STREAM,S_PORT_RX_BUFF_LEN);
 		//打开DMA
 		DMA_Cmd(USART_S_PORT_Rx_DMA_STREAM,ENABLE);
+
+        uarts_sport_irq_handler_cb_hook(RxBuffer, len);
 	} 
 }
 
 
 /***************************************************************************************************
- * @fn      USARTdbg_send
+ * @fn      uarts_dbg_send
  *
  * @brief   调试串口发送
  * @param   str -- 发送数据
  *			len -- 数据长度
- * @return  null
+ * @return  0 -- success
+ *          -1 -- failure
+ *          1 -- busy
  ***************************************************************************************************/  
-uint8_t USARTdbg_send(uint8_t *Str, uint16_t len)
+int uarts_dbg_send(uint8_t *Str, uint16_t len)
 {
+    IF_PTR_IS_NULL_RET_NULLPTR_ERR(Str);
+    
 	if(len > DBG_TX_BUF_LEN)
-		return 0;
+		return -1;
 	
 	if(dbgWriteBusyFlag)
-		return 0;
+		return 1;
 
 	dbgWriteBusyFlag = 1;
 
@@ -412,18 +422,18 @@ uint8_t USARTdbg_send(uint8_t *Str, uint16_t len)
 	USART_DMACmd(USARTdbg,USART_DMAReq_Tx,ENABLE);
 	DMA_Cmd(USARTdbg_Tx_DMA_STREAM,ENABLE);
 
-	return 1;
+	return 0;
 }
 
 
 /***************************************************************************************************
- * @fn      USARTdbg_Tx_DMA_IRQHandler_Callback
+ * @fn      uarts_dbg_tx_dma_irq_handler_callback
  *
  * @brief   调试串口DMA发送中断回调
  * @param   null
  * @return  null
  ***************************************************************************************************/  
-void USARTdbg_Tx_DMA_IRQHandler_Callback(void)
+void uarts_dbg_tx_dma_irq_handler_callback(void)
 {
 	if(DMA_GetITStatus(USARTdbg_Tx_DMA_STREAM, USARTdbg_Tx_DMA_FLAG) != RESET)
 	{
@@ -436,18 +446,19 @@ void USARTdbg_Tx_DMA_IRQHandler_Callback(void)
 }
 
 /***************************************************************************************************
- * @fn      USARTdbg_IRQHandler_Callback
+ * @fn      uarts_dbg_irq_handler_callback
  *
  * @brief   s-port串口中断回调
  * @param   null
  * @return  null
  ***************************************************************************************************/ 
-extern void USARTdbg_IRQHandler_CallbackHook(uint8_t *msg, uint16_t len);
-void USARTdbg_IRQHandler_Callback(void)
+extern void uarts_dbg_irq_handler_cb_hook(uint8_t *msg, uint16_t len);
+void uarts_dbg_irq_handler_callback(void)
 {
 	uint32_t temp = 0;
 	uint16_t len = 0;
-
+    uint8_t  RxBuffer[DBG_RX_BUF_LEN];
+    
 	//printf("enter usart3 interrupt!\r\n");
 
 	if(USART_GetITStatus(USARTdbg, USART_IT_RXNE) != RESET)
@@ -470,7 +481,7 @@ void USARTdbg_IRQHandler_Callback(void)
 		//接收字节数
 		len = DBG_RX_BUF_LEN - DMA_GetCurrDataCounter(USARTdbg_Rx_DMA_STREAM);
 
-		USARTdbg_IRQHandler_CallbackHook(dbg_RxBuffer, len);
+		memcpy(RxBuffer, dbg_RxBuffer, len);
 
 		//printf("receive msg len is %d \r\n", len);
 
@@ -478,6 +489,8 @@ void USARTdbg_IRQHandler_Callback(void)
 		DMA_SetCurrDataCounter(USARTdbg_Rx_DMA_STREAM,DBG_RX_BUF_LEN);
 		//打开DMA
 		DMA_Cmd(USARTdbg_Rx_DMA_STREAM,ENABLE);
+
+        uarts_dbg_irq_handler_cb_hook(RxBuffer, len);
 	} 
 }
 
