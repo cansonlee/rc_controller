@@ -52,8 +52,6 @@ typedef enum {
 #define COMM_MSG_SEND_CHANNELS 2
 #define COMM_MSG_RECEIVED_ACK  3
 
-#define COMM_CHANNEL_VALUES_LENGTH 32
-
 typedef struct {
     uint8_t calc_checksum;                                        // caculated xor check 
 
@@ -70,6 +68,8 @@ typedef struct {
     uint8_t packet_idx;             // index in current payload
 }comm_status_t;
 
+
+#define _COMM_MSG_ADDR(msg) (&(msg)->magic1)
 
 void comm_protocol_parse(uint8_t c, void (*pfParsedHook)(comm_message_t*));
 int8_t comm_protocol_msg_pack(void*buf, uint8_t len, comm_message_t* msg);
