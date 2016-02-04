@@ -49,12 +49,12 @@ void Task_comm(void const * argument)
 
 }
 
-void comm_data_send(void* buf, uint8_t len){
+void comm_data_send(uint8_t id, void* buf, uint8_t len){
 
     uint8_t ret_len;
     comm_message_t msg;
     
-    ret_len = comm_protocol_msg_pack(buf, len, &msg);
+    ret_len = comm_protocol_msg_pack(id, buf, len, &msg);
     if (ret_len > 0){
         // send
         // addr _COMM_MSG_ADDR(&msg)
