@@ -1,6 +1,6 @@
 #include "communicate.h"
 #include "global.h"
-
+#include "usarts.h"
 #include "comm_protocol.h"
 
 #define RADIO_ACK_LEN 32
