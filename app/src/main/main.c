@@ -11,6 +11,7 @@
 #include "display.h"
 #include "usarts.h"
 #include "global.h"
+#include "menu.h"
 
 
 
@@ -52,6 +53,7 @@ void main(void)
 //	keys_n_ADCs_init();
 //	LCD_Init();
 	uarts_init();
+	menu_init();
 #if 0
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;

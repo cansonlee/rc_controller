@@ -82,21 +82,23 @@ LDFLAGS   = -nostartfiles -Wl,-Map=$(PROGRAM).map,--cref,--gc-sections --specs=n
 SRCDIRS   = ./freertos/src \
             ./drivers/CMSIS/src \
             ./drivers/STM32F2xx_StdPeriph_Driver/src \
-			./drivers/delay_timer/src \
-			./drivers/eeprom/src \
-			./drivers/haptic/src \
-			./drivers/keys/src \
-			./drivers/lcd/src \
-			./drivers/sound_card/src \
-			./drivers/USARTs/src \
-			./drivers/switches/src \
-			./drivers/ana_inputs/src \
+	    ./drivers/delay_timer/src \
+	    ./drivers/eeprom/src \
+	    ./drivers/haptic/src \
+	    ./drivers/keys/src \
+	    ./drivers/lcd/src \
+	    ./drivers/sound_card/src \
+	    ./drivers/USARTs/src \
+	    ./drivers/switches/src \
+	    ./drivers/ana_inputs/src \
             ./app/src/ADCs \
-			./app/src/communicate \
+	    ./app/src/communicate \
             ./app/src/display \
-			./app/src/main \
-			./app/src/system \
+	    ./app/src/main \
+	    ./app/src/system \
             ./target/miniv3 \
+	    ./util \
+	    ./app/src/menu 
 
 
 #ifeq ($(RADIO_TYPE), PRX)
@@ -113,13 +115,14 @@ INCDIRS  = -I./freertos/inc \
            -I./drivers/delay_timer/inc \
            -I./drivers/eeprom/inc \
            -I./drivers/haptic/inc \
-		   -I./drivers/keys/inc \
-		   -I./drivers/lcd/inc \
-		   -I./drivers/sound_card/inc \
-		   -I./drivers/USARTs/inc \
-		   -I./drivers/driver_global \
-		   -I./drivers/switches/inc \
-		   -I./drivers/ana_inputs/inc \
+	   -I./drivers/keys/inc \
+	   -I./drivers/lcd/inc \
+	   -I./drivers/sound_card/inc \
+	   -I./drivers/USARTs/inc \
+	   -I./drivers/driver_global \
+	   -I./drivers/switches/inc \
+	   -I./drivers/ana_inputs/inc \
+	   -I./util
 
 # The ld scripts
 LDSCRIPT = ./script/stm32_flash.ld
