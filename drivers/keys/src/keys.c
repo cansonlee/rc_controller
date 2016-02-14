@@ -110,12 +110,15 @@ KEY_VAL keys_scan(void)
  ***************************************************************************************************/	 
 KEY_VAL keys_read(KEY_STATUS *state)
 {
-	KEY_VAL			currentKeyValue;
-	static KEY_VAL 	lastKeyVaule = KEY_READY;
-	static uint8_t	keyTimer = 0;
+	KEY_VAL				currentKeyValue;
+	static KEY_VAL 		lastKeyVaule = KEY_READY;
+	static KEY_STATUS	lastKeyState;
+	static uint8_t		keyTimer = 0;
 	
 
 	currentKeyValue = keys_scan();
+
+#if 0	
 	if(currentKeyValue == KEY_READY)
 	{
 		keyTimer = 0;
@@ -147,7 +150,78 @@ KEY_VAL keys_read(KEY_STATUS *state)
 		}
 			
 	}
-	
+#endif
+
+	if(currentKeyValue == KEY_READY)
+	{
+		if(lastKeyVaule != KEY_READY)
+		{			
+			if((lastKeyState == KEY_HOLD) || (lastKeyState == KEY_PRESSED))
+			{
+				lastKeyState = KEY_RELEASED;
+				lastKeyVaule = KEY_READY;
+				*state = KEY_RELEASED;
+				return KEY_READY;
+			}
+
+			if(keyTimer == 0)		//去抖后无按键
+			{
+				lastKeyState = KEY_RELEASED;
+				lastKeyVaule = KEY_READY;
+				*state = KEY_RELEASED;
+				return KEY_READY;
+			}
+			
+			if(keyTimer < 10)
+			{
+				lastKeyState = KEY_PRESSED;
+				*state = KEY_PRESSED;
+				return lastKeyVaule;
+			}
+		}
+		else
+		{
+			lastKeyState = KEY_RELEASED;
+			lastKeyVaule = KEY_READY;
+			*state = KEY_RELEASED;
+			return KEY_READY;
+		}
+	}
+	else
+	{
+		if(lastKeyVaule == KEY_READY)
+		{
+			lastKeyVaule = currentKeyValue;
+			lastKeyState = KEY_RELEASED;
+			*state = KEY_RELEASED;
+			keyTimer = 0;
+			return KEY_READY;
+		}
+		
+		//去抖完毕
+		if(lastKeyVaule != currentKeyValue)		//键值不匹配，重新滤抖
+		{
+			lastKeyVaule = currentKeyValue;
+			lastKeyState = KEY_RELEASED;
+			*state = KEY_RELEASED;
+			keyTimer = 0;
+			return KEY_READY;
+		}
+		
+		keyTimer++;
+		
+		if(keyTimer > 10)		// >100ms 长按
+		{
+			keyTimer = 11;
+			*state = KEY_HOLD;
+			lastKeyState = KEY_HOLD;
+			return currentKeyValue;
+		}
+
+		lastKeyState = KEY_RELEASED;
+		*state = KEY_RELEASED;
+		return KEY_READY;
+	}
 }
 
 

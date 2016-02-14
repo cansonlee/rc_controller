@@ -36,7 +36,6 @@
 #include "stm32f2xx_it.h"
 #include "cmsis_os.h"
 #include "lcd.h"
-#include "delay_timer.h"
 #include "ana_inputs.h"
 
 
@@ -75,8 +74,6 @@ void SysTick_Handler(void)
   if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
     xPortSysTickHandler();
   }
-
-  msConter();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -142,6 +139,7 @@ void USART3_IRQHandler(void)
 void DMA1_Stream7_IRQHandler(void)
 {
 	lcd_dma_irq_handler_callback();
+	printf("enter in lcd dma irq @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 }
 
 void DMA2_Stream0_IRQHandler(void)

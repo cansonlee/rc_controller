@@ -14,8 +14,8 @@
 
 #define     LOW_PASS_FILTER_PARA              0.5
 
-#define     MAX(a,b)                            (return(a>b ? a : b))
-#define     MIN(a,b)                            (return(a<b ? a : b))
+#define     MAX(a,b)                            (a>b ? a : b)
+#define     MIN(a,b)                            (a<b ? a : b)
 
 typedef struct
 {
@@ -30,6 +30,7 @@ typedef struct
     MIXER_LANDING_MODE_t     mixer_channel_config;
 	uint16_t 				 failsafeMode;
 	uint16_t				 valid;
+    uint32_t                 rx_num;
 }Param_To_Store_t;
 
 

@@ -11,6 +11,7 @@
 #include "display.h"
 #include "usarts.h"
 #include "global.h"
+#include "power.h"
 
 
 
@@ -46,12 +47,17 @@ void main(void)
 	
 	system_config();	
 
-//	eepromInit();
-//	Audio_init();
-//	HAPTIC_init();
-//	keys_n_ADCs_init();
-//	LCD_Init();
+	delay_init();
 	uarts_init();
+    pwr_init();
+    ana_inputs_init();
+	lcd_init();
+
+    //打开CPU电源
+    pwr_on_off(PWR_MODULE_MAIN, PWR_ON);
+    //打开内部RF电源
+    pwr_on_off(PWR_MODULE_INT_RF, PWR_ON);
+    
 #if 0
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
@@ -100,7 +106,7 @@ void main(void)
 	RCC_GetClocksFreq(&rcc_clk);
 
 	
-
+#if 0
 	//背光控制
 	RCC_AHB1PeriphClockCmd(LCD_BLW_GPIO_CLK, ENABLE);	
 	GPIO_InitStructure.GPIO_Pin = LCD_BLW_PIN |LCD_BL_PIN;
@@ -113,10 +119,23 @@ void main(void)
 	//背光开启
 	GPIO_SetBits(LCD_BL_PORT, LCD_BL_PIN);
 	GPIO_SetBits(LCD_BLW_PORT, LCD_BLW_PIN);
-
+#endif
 	printf("rcc_clk: %d %d %d %d \r\n", rcc_clk.SYSCLK_Frequency, rcc_clk.HCLK_Frequency, rcc_clk.PCLK1_Frequency, rcc_clk.PCLK2_Frequency);
 
 	printf("test\r\n");
+
+	lcd_clean();
+	printf("lcd clean @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+	
+	uint8_t x_buf[LCD_TX_BUFF_SIZE];
+
+	memset(x_buf, 0xff, sizeof(x_buf));
+	
+	while(0 != lcd_data_burst_write(x_buf, LCD_TX_BUFF_SIZE))
+		{};
+	printf("lcd write all 0xff @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+
+	lcd_char_disp(0,0,'A');
 
 	printf("USARTdbg->CR1=%x, USARTdbg->CR2=%x, USARTdbg->CR3=%x \r\n",USARTdbg->CR1, USARTdbg->CR2, USARTdbg->CR3);
 
@@ -127,8 +146,8 @@ void main(void)
 //    osThreadDef(commTask, Task_comm, osPriorityNormal, 0, 1024);
 //    Task_commHandle = osThreadCreate(osThread(commTask), NULL);
 
-//	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
-//    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
+	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
+    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
 
 //	osThreadDef(dispTask, Task_disp, osPriorityNormal, 0, 1024);
 //    Task_dispHandle = osThreadCreate(osThread(dispTask), NULL);
@@ -141,8 +160,8 @@ void main(void)
 //	osMessageQDef(toComm, 5, MSG_QUEUE_t);
 //	xQueue_ToComm = osMessageCreate(osMessageQ(toComm), NULL);
 	
-//	osMessageQDef(toADCs, 5, MSG_QUEUE_t);
-//	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
+	osMessageQDef(toADCs, 1, MSG_QUEUE_t);
+	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
 	
 //	osMessageQDef(toDisp, 5, MSG_QUEUE_t);
 //	xQueue_ToDisp = osMessageCreate(osMessageQ(toDisp), NULL);
@@ -157,7 +176,7 @@ void main(void)
 
     //printf("tasks hava created, os starting ...\r\n");
     /* Start scheduler */
-//    osKernelStart();
+    osKernelStart();
 
     /* We should never get here as control is now taken by the scheduler */
     //printf("scheduler has been started ...\r\n");
@@ -168,6 +187,7 @@ void main(void)
     {
         if(dbg_recv_len != 0)
     	{
+    	    printf("loop , rx len:%d.\r\n", dbg_recv_len);
     		uarts_dbg_send(dbg_Buffer, dbg_recv_len);
     		dbg_recv_len = 0;
     	}
@@ -213,6 +233,8 @@ void uarts_dbg_irq_handler_cb_hook(uint8_t *msg, uint16_t len)
 {
 	memcpy(dbg_Buffer, msg, len);
 	dbg_recv_len = len;
+    printf("in call back, rx len:%d.\r\n", dbg_recv_len);
+    uarts_dbg_send(dbg_Buffer, dbg_recv_len);
 }
 
 

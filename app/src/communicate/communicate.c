@@ -59,6 +59,16 @@ void comm_data_send(uint8_t id, void* buf, uint8_t len){
         // send
         // addr _COMM_MSG_ADDR(&msg)
         // len ret_len
+        uarts_sport_send((uint8_t*)_COMM_MSG_ADDR(&msg), ret_len);
+        printf("the msg is:\r\n");
+		printf("msgid %d:\r\n",msg.msgid);
+		printf("msg len %d:\r\n",msg.len);
+		printf("payload:\r\n");
+		for(uint8_t i=0; i<len; i++)
+		{
+			printf("%#x ", msg.payload[i]);
+		}
+        printf("\r\n");
     }
 }
 
@@ -67,6 +77,8 @@ void comm_protocol_msg_parsed_hook(comm_message_t* msg){
         case COMM_MSG_RECEIVED_ACK:
             if (msg->len == RADIO_ACK_LEN){
                 mav_data_decode(msg->payload, &m_mav_data);
+
+				printf("recv mavlink %#x at %d:\r\n", m_mav_data.is_armed, __LINE__);
             }
         break;
         default:

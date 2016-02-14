@@ -91,6 +91,7 @@ SRCDIRS   = ./freertos/src \
 			./drivers/USARTs/src \
 			./drivers/switches/src \
 			./drivers/ana_inputs/src \
+			./drivers/power/src \
             ./app/src/ADCs \
 			./app/src/communicate \
             ./app/src/display \
@@ -120,6 +121,7 @@ INCDIRS  = -I./freertos/inc \
 		   -I./drivers/driver_global \
 		   -I./drivers/switches/inc \
 		   -I./drivers/ana_inputs/inc \
+		   -I./drivers/power/inc \
 
 # The ld scripts
 LDSCRIPT = ./script/stm32_flash.ld

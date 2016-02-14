@@ -11,6 +11,8 @@
 #include "cmsis_os.h"
 #include "ADCs.h"
 #include "usarts.h"
+#include "communicate.h"
+#include "power.h"
 
 
 #include <stdlib.h>
@@ -39,7 +41,7 @@ uint16_t					g_gets_adcs_val[ADC_MODULE_NUMBER];					//其它任务获取各通道值缓存
 Param_To_Store_t ReadFlash(uint32_t addr);
 void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len);
 int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue);;
-
+float adc_voltage_calc(uint16_t adc_val);
 
 
 /***************************************************************************************************
@@ -54,6 +56,8 @@ void Task_ADCs(void const * argument)
 	uint8_t			        i;
     uint8_t                 LastSetStickMaxMinFlag;
     uint8_t                 LastRadioPairingReqFlag;
+    uint8_t                 LastPairingStatusFlag;
+    uint8_t                 buf[32];
     float                   fVoltage;
     ADC_Value_Calibration_t calib_para[ADC_MODULE_NUMBER-1];
 	
@@ -95,15 +99,20 @@ void Task_ADCs(void const * argument)
         g_Param_To_Store.mixer_channel_config.Mixer_Mode_L6.value.sws_value = (uint16_t)((SLIDE_UP << SW_SD_L_SHIFT) | (SLIDE_DOWN << SW_SE_L_SHIFT));
         
 		g_Param_To_Store.failsafeMode = FAILSAFE_MODE_RTL;
+        g_Param_To_Store.rx_num = 0;
 	}
 
     //init caibrat data
     memset(calib_para, 1024, sizeof(calib_para));
+
+    printf("adc task read flash over. at %d\r\n", __LINE__);
     
 	for(;;)
 	{
-		xQueueReceive(xSemaphore_ForADCs, &g_adc_msg, portMAX_DELAY);
+		xQueueReceive(xQueue_ToADCs, &g_adc_msg, 0);//portMAX_DELAY);
 
+        printf("adc task receive value. at %d\r\n", __LINE__);
+        
         //遥控校准过程中
         while(g_SetStickMaxMinFlag)    
         {
@@ -153,7 +162,9 @@ void Task_ADCs(void const * argument)
     							   g_Param_To_Store.ADCs_Calibrate_value[i].LowValue);
 
                     g_ppm_channels[CH5_MIX + (i-STICK_LV)] = g_adc_calibr_val[i];
-    			}		
+    			}
+                
+                //printf("i=%d, val=%d, calib=%d. at %d\r\n", i, g_adc_msg.msg[i],g_adc_calibr_val[i], __LINE__);
     		}
         }
         
@@ -163,11 +174,14 @@ void Task_ADCs(void const * argument)
         if(fVoltage > 3.6)
         {
             //保持开机
+            pwr_on_off(PWR_MODULE_MAIN, PWR_ON);
         }
         else if(fVoltage <= 3.4)
         {
             //关机
+            pwr_on_off(PWR_MODULE_MAIN, PWR_OFF);
         }
+        //printf("vol=%f, at %d\r\n", fVoltage, __LINE__);
 
         //保存新值由ui获取
         memcpy(g_gets_adcs_val, g_adc_calibr_val, ADC_MODULE_NUMBER-1);
@@ -208,25 +222,45 @@ void Task_ADCs(void const * argument)
 
         //----发报文------------------
         //配对
-        if(g_radioPairingReqFlag)
+        if(1)	//g_radioPairingReqFlag)
         {
-            
+            buf[0] = 0;
+            buf[1] = 1;
+            comm_data_send(1, buf, 2);
+            LastPairingStatusFlag = 1;
+        }
+        else
+        {
+            if(LastPairingStatusFlag)
+            {
+                buf[0] = 0;
+                buf[1] = 0;
+                comm_data_send(1, buf, 2);
+                LastPairingStatusFlag = 0;
+            }
         }
 
         //通道报文
-
-
+        //comm_data_send(3, g_ppm_channels, sizeof(g_ppm_channels));
+#if 0
+        printf("send package at %d:\r\n",  __LINE__);
+        for(i=0; i<PPM_CH_NUM; i++)
+        {
+            printf("%#x ", g_ppm_channels[i]);
+        }
+        printf("\r\n");
+#endif
         //---------更新FLASH---------------
         if(g_saveParaFlag)
         {
             g_saveParaFlag = 0;
 
-            WriteFlash(ParaFlashAddr, g_Param_To_Store, sizeof(g_Param_To_Store)/4);
+            WriteFlash(ParaFlashAddr, &g_Param_To_Store, sizeof(g_Param_To_Store)/4);
         }
 
         
 
-		osDelay(2);		
+		osDelay(1000);		
 	}
 }
 
@@ -460,11 +494,12 @@ int adc_all_in_val_get(ALL_STICK_INPUT_t *stickValue)
  * @param   null
  * @return  0 -- success
  ***************************************************************************************************/
-int adc_radio_pairing_req(void)
+int adc_radio_pairing_req(uint32_t x)
 {
 	portENTER_CRITICAL();
 	
 	g_radioPairingReqFlag = 1;
+    g_Param_To_Store.rx_num = x;
 	
 	portEXIT_CRITICAL();
 
@@ -486,6 +521,8 @@ int adc_radio_pairing_end(void)
 	g_radioPairingReqFlag = 0;
 	
 	portEXIT_CRITICAL();
+    
+    g_saveParaFlag = 1;
 
 	return 0;		
 }
@@ -503,7 +540,7 @@ int adc_mixer_calc(MIXER_CHANNEL_MODE_t mixer, MISC_SW_VALUE sw_val)
 {
 	if(mixer.switchs != 0)
     {
-        if((sw_val & mixer.switchs) == mixer.value)        //mixer.logic == AND 一定成立， OR 和 NONE 也一定成立
+        if((sw_val.sws_value & mixer.switchs) == mixer.value.sws_value)        //mixer.logic == AND 一定成立， OR 和 NONE 也一定成立
         {
             return 0;
         }
@@ -511,7 +548,7 @@ int adc_mixer_calc(MIXER_CHANNEL_MODE_t mixer, MISC_SW_VALUE sw_val)
         {
             if((mixer.switchs & SW_SA_MASK) != 0)           //判断组合键中的单个键值
             {
-                if((sw_val & SW_SA_MASK) == (mixer.value & SW_SA_MASK))
+                if((sw_val.sws_value & SW_SA_MASK) == (mixer.value.sws_value & SW_SA_MASK))
                 {
                     return 0;
                 }
@@ -519,7 +556,7 @@ int adc_mixer_calc(MIXER_CHANNEL_MODE_t mixer, MISC_SW_VALUE sw_val)
 
             if((mixer.switchs & SW_SB_MASK) != 0)           //判断组合键中的单个键值
             {
-                if((sw_val & SW_SB_MASK) == (mixer.value & SW_SB_MASK))
+                if((sw_val.sws_value & SW_SB_MASK) == (mixer.value.sws_value & SW_SB_MASK))
                 {
                     return 0;
                 }
@@ -527,7 +564,7 @@ int adc_mixer_calc(MIXER_CHANNEL_MODE_t mixer, MISC_SW_VALUE sw_val)
 
             if((mixer.switchs & SW_SC_MASK) != 0)           //判断组合键中的单个键值
             {
-                if((sw_val & SW_SC_MASK) == (mixer.value & SW_SC_MASK))
+                if((sw_val.sws_value & SW_SC_MASK) == (mixer.value.sws_value & SW_SC_MASK))
                 {
                     return 0;
                 }
@@ -535,7 +572,7 @@ int adc_mixer_calc(MIXER_CHANNEL_MODE_t mixer, MISC_SW_VALUE sw_val)
 
             if((mixer.switchs & SW_SD_MASK) != 0)           //判断组合键中的单个键值
             {
-                if((sw_val & SW_SD_MASK) == (mixer.value & SW_SD_MASK))
+                if((sw_val.sws_value & SW_SD_MASK) == (mixer.value.sws_value & SW_SD_MASK))
                 {
                     return 0;
                 }
@@ -543,7 +580,7 @@ int adc_mixer_calc(MIXER_CHANNEL_MODE_t mixer, MISC_SW_VALUE sw_val)
 
             if((mixer.switchs & SW_SE_MASK) != 0)           //判断组合键中的单个键值
             {
-                if((sw_val & SW_SE_MASK) == (mixer.value & SW_SE_MASK))
+                if((sw_val.sws_value & SW_SE_MASK) == (mixer.value.sws_value & SW_SE_MASK))
                 {
                     return 0;
                 }

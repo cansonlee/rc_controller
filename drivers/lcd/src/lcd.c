@@ -8,7 +8,9 @@
 
 /////////////////////È«¾Ö±äÁ¿¶¨Òå///////////////////////////////////////
 uint8_t				g_LcdWriteBusyFlag;					//LCDÐ´·±Ã¦±êÖ¾
-uint8_t				g_lcdTxBuff[LCD_H/8][LCD_W];			//LCDÐ´»º´æ			
+//uint8_t				g_lcdTxBuff[LCD_H/8][LCD_W];			//LCDÐ´»º´æ	
+uint8_t				g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCDÐ´»º´æ	
+
 
 int lcd_cursor_addr_set(uint8_t x, uint8_t y);
 
@@ -56,12 +58,12 @@ void lcd_regist(void)
 
 	RCC_AHB1PeriphClockCmd(LCD_SPI_NCS_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_SPI_NCS_PIN ;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(LCD_SPI_NCS_PORT, &GPIO_InitStructure);
-	GPIO_PinAFConfig(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN_SOURCE, LCD_SPI_NCS_GPIO_AF);
+	//GPIO_PinAFConfig(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN_SOURCE, LCD_SPI_NCS_GPIO_AF);
 
 	//A0¶Ë¿ÚÅäÖÃ
 	RCC_AHB1PeriphClockCmd(LCD_A0_GPIO_CLK, ENABLE);
@@ -89,7 +91,7 @@ void lcd_regist(void)
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Hard;
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
@@ -97,12 +99,13 @@ void lcd_regist(void)
 //	SPI_I2S_ITConfig(LCD_SPI_MASTER,SPI_I2S_IT_TXE,DISABLE);
 //	SPI_I2S_ITConfig(LCD_SPI_MASTER,SPI_I2S_IT_RXNE,DISABLE);
 	/* Enable SPI_MASTER NSS output for master mode */
-	SPI_SSOutputCmd(LCD_SPI_MASTER, ENABLE);
+	SPI_SSOutputCmd(LCD_SPI_MASTER, DISABLE);
 	/* Enable SPI_MASTER DMA TX */
 	RCC_AHB1PeriphClockCmd(LCD_DMA_CLK, ENABLE);
+	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
 	DMA_DeInit(LCD_DMA_STREAM);
 	DMA_InitStructure.DMA_Channel = LCD_DMA_CHANNLE;
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)LCD_SPI_MASTER->DR;
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&LCD_SPI_MASTER->DR);
 	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)g_lcdTxBuff;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
 	DMA_InitStructure.DMA_BufferSize = LCD_TX_BUFF_SIZE;
@@ -111,12 +114,12 @@ void lcd_regist(void)
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;	
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;		
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;         
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(LCD_DMA_STREAM, &DMA_InitStructure);
-	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
-	SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,ENABLE);
-	DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, ENABLE);
-	DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
 
 	//ÖÐ¶Ï¿ØÖÆ
 	NVIC_InitStructure.NVIC_IRQChannel = LCD_DMA_IRQn;
@@ -139,13 +142,15 @@ void lcd_regist(void)
  ***************************************************************************************************/  
 int lcd_cmd_write(uint8_t cmd)
 {
-	GPIO_ResetBits(LCD_A0_PORT, LCD_A0_PIN);
+	LCD_A0_LOW();
+	LCD_NCS_LOW()
 	while ( ( LCD_SPI_MASTER->SR & SPI_SR_TXE ) == 0 ) 
 	{};
   	(void)LCD_SPI_MASTER->DR ;		// Clear receive
   	LCD_SPI_MASTER->DR = cmd ;
   	while ( ( LCD_SPI_MASTER->SR & SPI_SR_RXNE ) == 0 ) 
 	{};
+	LCD_NCS_HIGH();
 
 	return 0;
 }
@@ -159,14 +164,16 @@ int lcd_cmd_write(uint8_t cmd)
  ***************************************************************************************************/  
 void lcd_data_write(uint8_t data)
 {
-	GPIO_SetBits(LCD_A0_PORT, LCD_A0_PIN);
+	LCD_A0_HIGH();
+	LCD_NCS_LOW()
 	while ( ( LCD_SPI_MASTER->SR & SPI_SR_TXE ) == 0 ) 
 	{};
   	(void)LCD_SPI_MASTER->DR ;		// Clear receive
   	LCD_SPI_MASTER->DR = data ;
   	while ( ( LCD_SPI_MASTER->SR & SPI_SR_RXNE ) == 0 ) 
 	{};
-
+	LCD_NCS_HIGH();
+	
 	return 0;
 }
 
@@ -199,11 +206,23 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
 
 	lcd_cursor_addr_set(0,0);		
 
-	GPIO_SetBits(LCD_A0_PORT, LCD_A0_PIN);
-	
+	LCD_A0_HIGH();
+	LCD_NCS_LOW();
+
+	//Æô¶¯DMA
+	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
+	DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
+
 	memcpy(g_lcdTxBuff, buf, len);
 	DMA_SetCurrDataCounter(LCD_DMA_STREAM, len);
+	
+	SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,ENABLE);
+	DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, ENABLE);		
+	
 	DMA_Cmd(LCD_DMA_STREAM,ENABLE);
+
+	printf("begin lcd dma write @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+	printf(" SPI3->CR1:%#x, SPI3->CR2:%#x, SPI3->SR:%#x, DMA1_Stream7->CR:%#x, DMA1->HIFCR:%#x\r\n", SPI3->CR1, SPI3->CR2, SPI3->SR, DMA1_Stream7->CR, DMA1->HIFCR);
 	
 	return 0;
 }
@@ -219,9 +238,22 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
 {
 	  if(DMA_GetITStatus(LCD_DMA_STREAM, LCD_DMA_TC_FLAG) != RESET)
 	  {
+	 	DMA_Cmd(LCD_DMA_STREAM,DISABLE);
 	    DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
-	    DMA_Cmd(LCD_DMA_STREAM,DISABLE);
+		DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, DISABLE);
+	    SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,DISABLE);
+
+		while ( LCD_SPI_MASTER->SR & SPI_SR_BSY ) 
+		{
+		    /* Wait for SPI to finish sending data 
+		    The DMA TX End interrupt comes two bytes before the end of SPI transmission,
+		    therefore we have to wait here.
+		    */
+		}
+		LCD_NCS_HIGH();
+  
 		g_LcdWriteBusyFlag = 0;
+		printf("enter in lcd dma irq @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 	  }
 }
 
@@ -256,19 +288,20 @@ void lcd_init(void)
 {
 	lcd_regist();
 
+	
 	//±³¹â¿ªÆô
 	GPIO_SetBits(LCD_BL_PORT, LCD_BL_PIN);
 	GPIO_SetBits(LCD_BLW_PORT, LCD_BLW_PIN);
 	
 	//LCD RST
-	GPIO_ResetBits(LCD_RST_PORT, LCD_RST_PIN);	
-	Delay_ms(1);
-	GPIO_SetBits(LCD_RST_PORT, LCD_RST_PIN);
-	Delay_ms(300);
+	LCD_RST_LOW();	
+	delay_ms(1);
+	LCD_RST_HIGH();
+	delay_ms(300);
 
 	//LCD ¼Ä´æÆ÷
 	lcd_cmd_write(0x2F);   //Internal pump control
-	Delay_ms(20);
+	delay_ms(20);
 	lcd_cmd_write(0x24);   //Temperature compensation
 	lcd_cmd_write(0xE9);   //set bias=1/10
 	lcd_cmd_write(0x81);   //Set Vop
@@ -296,7 +329,8 @@ void lcd_init(void)
 	lcd_cmd_write(0xD3);
 
 	lcd_cmd_write(0xAF);	//dc2=1, IC into exit SLEEP MODE, dc3=1 gray=ON, dc4=1 Green Enhanc mode disabled
-  	Delay_ms(20);      //needed for internal DC-DC converter startup
+  	delay_ms(20);      //needed for internal DC-DC converter startup
+  	printf("lcd init over! @ %s,%s,%d\r\n", __FILE__, __func__, __LINE__);
 }
 
 
@@ -317,7 +351,7 @@ int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 	m = 0;
 	s_cFlag = 0;
 
-	pDispBuff = &g_lcdTxBuff[y][x];
+	pDispBuff = &g_lcdTxBuff[x + y*LCD_W];
 	do
 	{
 		if(LittleCharLib[i].Index[0] == dispByte)					// É¨ÃèÏà·û×Ö·û
@@ -333,7 +367,7 @@ int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 					m++;
 					pDispBuff++;
 				}
-				pDispBuff = &g_lcdTxBuff[y+1][x];
+				pDispBuff = &g_lcdTxBuff[(y+1)*LCD_W + x];
 			}
 		}
 		i++;
@@ -427,7 +461,7 @@ int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 	m = 0;
 	s_cFlag = 0;
 
-	pDispBuff = &g_lcdTxBuff[y][x];
+	pDispBuff = &g_lcdTxBuff[y*LCD_W + x];
 	do
 	{
 		if(LittleCharLib[i].Index[0] == dispByte)					// É¨ÃèÏà·û×Ö·û
@@ -443,7 +477,7 @@ int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 					m++;
 					pDispBuff++;
 				}
-				pDispBuff = &g_lcdTxBuff[y+1][x];
+				pDispBuff = &g_lcdTxBuff[(y+1)*LCD_W + x];
 			}
 		}
 		i++;
@@ -575,11 +609,11 @@ int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t hight)
  ***************************************************************************************************/ 
 int lcd_clean(void)
 {
-	uint8_t	 lcdSendBuff[LCD_H/8][LCD_W];
+	uint8_t	 lcdSendBuff[LCD_TX_BUFF_SIZE];
 
 	memset(lcdSendBuff, 0, sizeof(lcdSendBuff));
 	
-	lcd_data_burst_write(&lcdSendBuff[0][0], LCD_TX_BUFF_SIZE);
+	lcd_data_burst_write(lcdSendBuff, LCD_TX_BUFF_SIZE);
 	
 	return 0;
 }
