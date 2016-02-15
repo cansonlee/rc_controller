@@ -21,42 +21,42 @@ void keys_regist(void)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	//MENU KEY
-	RCC_AHB1PeriphResetCmd(KEY_MENU_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(KEY_MENU_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = KEY_MENU_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(KEY_MENU_PORT, &GPIO_InitStructure);
 
 	//PAGE KEY
-	RCC_AHB1PeriphResetCmd(KEY_PAGE_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(KEY_PAGE_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = KEY_PAGE_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(KEY_PAGE_PORT, &GPIO_InitStructure);
 
 	//EXIT KEY
-	RCC_AHB1PeriphResetCmd(KEY_EXIT_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(KEY_EXIT_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = KEY_EXIT_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(KEY_EXIT_PORT, &GPIO_InitStructure);
 
 	//PLUS KEY
-	RCC_AHB1PeriphResetCmd(KEY_PLUS_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(KEY_PLUS_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = KEY_PLUS_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(KEY_PLUS_PORT, &GPIO_InitStructure);
 
 	//MINUS KEY
-	RCC_AHB1PeriphResetCmd(KEY_MINUS_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(KEY_MINUS_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = KEY_MINUS_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(KEY_MINUS_PORT, &GPIO_InitStructure);
 
 	//ENTER KEY
-	RCC_AHB1PeriphResetCmd(KEY_ENTER_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(KEY_ENTER_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = KEY_ENTER_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
@@ -117,41 +117,7 @@ KEY_VAL keys_read(KEY_STATUS *state)
 	
 
 	currentKeyValue = keys_scan();
-
-#if 0	
-	if(currentKeyValue == KEY_READY)
-	{
-		keyTimer = 0;
-		*state = KEY_RELEASED;
-		return KEY_READY;
-	}
-	else
-	{
-		if((lastKeyVaule == KEY_READY) || (lastKeyVaule != currentKeyValue))
-		{
-			lastKeyVaule = currentKeyValue;
-			keyTimer = 0;
-			*state = KEY_PRESSED;
-			return KEY_READY;
-		}
-		else
-		{
-			keyTimer++;
-			if(keyTimer > 1)
-			{
-				*state = KEY_PRESSED;
-				return currentKeyValue;
-			}
-			else if(keyTimer > 10)		// >100ms ³¤°´
-			{
-				*state = KEY_HOLD;
-				return currentKeyValue;
-			}
-		}
-			
-	}
-#endif
-
+	
 	if(currentKeyValue == KEY_READY)
 	{
 		if(lastKeyVaule != KEY_READY)

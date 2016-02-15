@@ -98,6 +98,8 @@ SRCDIRS   = ./freertos/src \
 			./app/src/main \
 			./app/src/system \
             ./target/miniv3 \
+			./util \
+			./app/src/menu 
 
 
 #ifeq ($(RADIO_TYPE), PRX)
@@ -122,6 +124,7 @@ INCDIRS  = -I./freertos/inc \
 		   -I./drivers/switches/inc \
 		   -I./drivers/ana_inputs/inc \
 		   -I./drivers/power/inc \
+		   -I./util
 
 # The ld scripts
 LDSCRIPT = ./script/stm32_flash.ld

@@ -11,7 +11,10 @@
 #include "display.h"
 #include "usarts.h"
 #include "global.h"
+#include "delay_timer.h"
 #include "power.h"
+#include "menu.h"
+#include "keys.h"
 
 
 
@@ -50,14 +53,21 @@ void main(void)
 	delay_init();
 	uarts_init();
     pwr_init();
-    ana_inputs_init();
+//    ana_inputs_init();
 	lcd_init();
-
+	keys_init();
     //打开CPU电源
     pwr_on_off(PWR_MODULE_MAIN, PWR_ON);
     //打开内部RF电源
     pwr_on_off(PWR_MODULE_INT_RF, PWR_ON);
-    
+
+//	lcd_clean();
+//	delay_ms(2000);
+//	lcd_str_disp(0,0,"What are you doing? ");
+//	lcd_clean();
+//	delay_ms(5000);
+	
+	menu_init();
 #if 0
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 ;
@@ -120,6 +130,8 @@ void main(void)
 	GPIO_SetBits(LCD_BL_PORT, LCD_BL_PIN);
 	GPIO_SetBits(LCD_BLW_PORT, LCD_BLW_PIN);
 #endif
+
+#if 0
 	printf("rcc_clk: %d %d %d %d \r\n", rcc_clk.SYSCLK_Frequency, rcc_clk.HCLK_Frequency, rcc_clk.PCLK1_Frequency, rcc_clk.PCLK2_Frequency);
 
 	printf("test\r\n");
@@ -135,19 +147,55 @@ void main(void)
 		{};
 	printf("lcd write all 0xff @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 
-	lcd_char_disp(0,0,'A');
+	delay_ms(2000);
+	
+	lcd_clean();
+
+	delay_ms(2000);
+	
+//	lcd_char_disp(0,0,'C');
+//	lcd_char_disp(20,0,'A');
+//	lcd_char_disp(40,0,'B');
+	lcd_str_disp(0,0,"What are you doing? ");
+	printf("lcd write 0xff @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 
 	printf("USARTdbg->CR1=%x, USARTdbg->CR2=%x, USARTdbg->CR3=%x \r\n",USARTdbg->CR1, USARTdbg->CR2, USARTdbg->CR3);
 
 	printf("test again!\r\n");
+
+
+	lcd_disp_bmp(50, 30, skyborne_bmp, 39, 32);
+
+	delay_ms(5000);
+
+	lcd_area_clear(50,30,39,32);
+
+	delay_ms(5000);
+
+	lcd_bmp_inv_disp(50, 30, skyborne_bmp, 39, 32);
+
+	delay_ms(5000);
+
+	lcd_clean();
+
+	delay_ms(5000);
+
+	lcd_char_inv_disp(0,0, 'C');
+
+	lcd_clean();
+
+	delay_ms(5000);
+	
+	lcd_str_inv_disp(0,0,"What are you doing?");
+#endif	
 
 	/* Create the thread(s) */
     /* definition and creation of commTask */
 //    osThreadDef(commTask, Task_comm, osPriorityNormal, 0, 1024);
 //    Task_commHandle = osThreadCreate(osThread(commTask), NULL);
 
-	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
-    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
+//	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
+//    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
 
 //	osThreadDef(dispTask, Task_disp, osPriorityNormal, 0, 1024);
 //    Task_dispHandle = osThreadCreate(osThread(dispTask), NULL);
@@ -160,8 +208,8 @@ void main(void)
 //	osMessageQDef(toComm, 5, MSG_QUEUE_t);
 //	xQueue_ToComm = osMessageCreate(osMessageQ(toComm), NULL);
 	
-	osMessageQDef(toADCs, 1, MSG_QUEUE_t);
-	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
+//	osMessageQDef(toADCs, 1, MSG_QUEUE_t);
+//	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
 	
 //	osMessageQDef(toDisp, 5, MSG_QUEUE_t);
 //	xQueue_ToDisp = osMessageCreate(osMessageQ(toDisp), NULL);
@@ -185,12 +233,6 @@ void main(void)
     /* Infinite loop */
     while (1)
     {
-        if(dbg_recv_len != 0)
-    	{
-    	    printf("loop , rx len:%d.\r\n", dbg_recv_len);
-    		uarts_dbg_send(dbg_Buffer, dbg_recv_len);
-    		dbg_recv_len = 0;
-    	}
     }
     /* USER CODE END 3 */
 

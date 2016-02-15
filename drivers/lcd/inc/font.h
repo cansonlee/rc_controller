@@ -13,5 +13,8 @@ typedef struct
 
 extern LittleCharStruct LittleCharLib[];
 extern const uint8_t ascii_8x16[];
+extern const uint8_t ascii_0816[];
+extern const uint8_t ascii_bmp[];
+extern const uint8_t skyborne_bmp[];
 
 #endif
