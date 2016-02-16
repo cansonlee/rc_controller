@@ -156,6 +156,7 @@ void menu_info_cb
     {
         case UI_FRAME_OP_NUM_OF_PANEL_GET:
             menu_num_of_panel_get(page_id, info);
+            printf("num of panels %d", *(uint32_t*)info);
             break;
         case UI_FRAME_OP_PANEL_INFO_GET:
             menu_panel_info_get(page_id, panel_id, info);
