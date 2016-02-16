@@ -60,7 +60,7 @@ void menu_page_change
 )
 {
     uint16_t next_page_id = menu_logic_page_next_get(page_id);
-
+    printf("menu page change %d\r\n", next_page_id);
     if (next_page_id == page_id){
         return;
     }

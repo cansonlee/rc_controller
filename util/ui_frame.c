@@ -134,7 +134,7 @@ static void ui_frame_panel_disp_state_set
     uint8_t state
 )
 {
-    printf("panel %p state %d\r\n", panel, state);
+    printf("panel %p state %d content %s\r\n", panel, state, panel->content);
     if (UI_FRAME_PANEL_DISPLAY_STATE_NORMAL == state)
     {
         lcd_str_disp(panel->x, panel->y, panel->content);         
@@ -288,7 +288,9 @@ void ui_task
         ui_frame_display_update();
 
         key = keys_read(&key_status);
+        printf("ui task key status %d key %d\r\n", key_status, key);
 		event = key_to_event_map(key_status, key);
+        printf("ui task key map event %d", event);
         
         fn = g_uiScreen.ev_cb;
         
