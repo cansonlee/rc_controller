@@ -130,30 +130,24 @@ void ana_inputs_regist(void)
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;         
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;         
 	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SKYBORNE_ADC_DMA_STREAM, &DMA_InitStructure);				
 
 	//NVIC
-	NVIC_InitStructure.NVIC_IRQChannel = SKYBORNE_ADC_DMA_CHANNEL;
+	NVIC_InitStructure.NVIC_IRQChannel = SKYBORNE_ADC_DMA_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = SKYBORNE_ADC_NVIC_PRIORITY;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
 	ADC_Cmd(SKYBORNE_ADC, ENABLE);
-	
-	DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG);
-	ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-	ADC_DMACmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-	DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);	
-//	ADC_ITConfig(SKYBORNE_ADC, ADC_IT_EOC, ENABLE);
-//	ADC_ClearITPendingBit(SKYBORNE_ADC, ADC_IT_EOC);
-	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-	
-	ADC_SoftwareStartConv(SKYBORNE_ADC);
+
+
+	printf("SKYBORNE_ADC->SQR3:%#x, SQR2:%#x @ %s, %s, %d\r\n",SKYBORNE_ADC->SQR3, SKYBORNE_ADC->SQR2, __FILE__, __func__, __LINE__);
+//	printf("SKYBORNE_ADC_DMA_STREAM->CR:%#x, NDTR:%#x, HISR:%#x, LISR:%#x , FCR:%#x @ %s, %s, %d\r\n",DMA2_Stream0->CR, DMA2_Stream0->NDTR, DMA2->HISR, DMA2->LISR, DMA2_Stream0->FCR, __FILE__, __func__, __LINE__);
 }
 
 
@@ -169,6 +163,27 @@ void ana_inputs_init(void)
 	ana_inputs_regist();
 }
 
+/***************************************************************************************************
+* @fn 	 ana_inputs_sample_start
+*
+* @brief   摇杆、拨轮及电压监测采样开始
+* @param   NULL
+* @return  NULL
+***************************************************************************************************/
+void ana_inputs_sample_start(void)
+{
+	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM,DISABLE);
+	ADC_ClearFlag(SKYBORNE_ADC, ADC_FLAG_EOC | ADC_FLAG_STRT | ADC_FLAG_OVR);
+	DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG);
+
+	DMA_SetCurrDataCounter(SKYBORNE_ADC_DMA_STREAM, ADC_MODULE_NUMBER);
+	ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC, ENABLE);
+	ADC_DMACmd(SKYBORNE_ADC, ENABLE);
+	DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);	
+	
+	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);	
+	ADC_SoftwareStartConv(SKYBORNE_ADC);
+}
 
 /***************************************************************************************************
 * @fn 	 ana_inputs_adc_dma_irq_handler_callback
@@ -183,26 +198,29 @@ void ana_inputs_adc_dma_irq_handler_callback(void)
 	uint16_t adc_buf[ADC_MODULE_NUMBER];
 
     printf("go into adc dma interrupt!at %d\r\n", __LINE__);
-	if(DMA_GetITStatus(SKYBORNE_ADC_DMA_CHANNEL, SKYBORNE_ADC_DMA_TC_FLAG) != RESET)
+	if(DMA_GetITStatus(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG) != RESET)
 	{
-		DMA_Cmd(SKYBORNE_ADC_DMA_CHANNEL,DISABLE);
-		DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_CHANNEL, SKYBORNE_ADC_DMA_TC_FLAG);
-		ADC_ClearFlag(SKYBORNE_ADC, ADC_FLAG_EOC | ADC_FLAG_STRT | ADC_FLAG_OVR);				
+		DMA_Cmd(SKYBORNE_ADC_DMA_STREAM,DISABLE);
+		DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG);
+		ADC_ClearFlag(SKYBORNE_ADC, ADC_FLAG_EOC | ADC_FLAG_STRT | ADC_FLAG_OVR);	
 
+		printf("RV val=%d at %d\r\n",g_adcs_value[0], __LINE__);
+		ana_inputs_adc_dma_irq_handler_cb_hook(g_adcs_value, ADC_MODULE_NUMBER);	
+	
+#if 0
 		memcpy(adc_buf, g_adcs_value, ADC_MODULE_NUMBER);
         printf("RV val=%d at %d\r\n",g_adcs_value[0], __LINE__);
 		
 		//开启下一次转换和传送
-		DMA_SetCurrDataCounter(SKYBORNE_ADC_DMA_CHANNEL, ADC_MODULE_NUMBER);
+		DMA_SetCurrDataCounter(SKYBORNE_ADC_DMA_STREAM, ADC_MODULE_NUMBER);
 
-		ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-		ADC_DMACmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
+		ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC, ENABLE);
+		ADC_DMACmd(SKYBORNE_ADC, ENABLE);
 		DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);
 		
-		DMA_Cmd(SKYBORNE_ADC_DMA_CHANNEL,ENABLE);
+		DMA_Cmd(SKYBORNE_ADC_DMA_STREAM,ENABLE);
 		ADC_SoftwareStartConv(SKYBORNE_ADC);
-
-		ana_inputs_adc_dma_irq_handler_cb_hook(adc_buf, ADC_MODULE_NUMBER);		
+#endif					
 	}
 }
 

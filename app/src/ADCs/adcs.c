@@ -109,9 +109,16 @@ void Task_ADCs(void const * argument)
     
 	for(;;)
 	{
-		xQueueReceive(xQueue_ToADCs, &g_adc_msg, 0);//portMAX_DELAY);
+		ana_inputs_sample_start();
+		xQueueReceive(xQueue_ToADCs, &g_adc_msg, portMAX_DELAY);
 
-        printf("adc task receive value. at %d\r\n", __LINE__);
+		printf("adc task receive adc value @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+		printf("adc values: \r\n");
+		for(i=0; i<g_adc_msg.len; i++)
+		{
+			printf("ch[%d]=%d ", i, g_adc_msg.msg[i]);
+		}
+		printf("\r\n");
         
         //遥控校准过程中
         while(g_SetStickMaxMinFlag)    
@@ -222,7 +229,7 @@ void Task_ADCs(void const * argument)
 
         //----发报文------------------
         //配对
-        if(1)	//g_radioPairingReqFlag)
+        if(g_radioPairingReqFlag)
         {
             buf[0] = 0;
             buf[1] = 1;
@@ -260,7 +267,7 @@ void Task_ADCs(void const * argument)
 
         
 
-		osDelay(1000);		
+		osDelay(50);		
 	}
 }
 
@@ -280,7 +287,7 @@ void ana_inputs_adc_dma_irq_handler_cb_hook(uint16_t *adcs_value, uint8_t len)
 	msg.len = len;
 	memcpy(msg.msg, adcs_value, len);
 	//both ISR and Task
-	xQueueSendFromISR(xQueue_ToADCs, &msg, taskWoken);
+	xQueueSendFromISR(xQueue_ToADCs, &msg, &taskWoken);
 	portEND_SWITCHING_ISR(taskWoken);
 }
 

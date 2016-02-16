@@ -99,6 +99,7 @@
 #define		SKYBORNE_ADC_CLK			RCC_APB2Periph_ADC1
 #define		SKYBORNE_ADC_DMA_STREAM		DMA2_Stream0
 #define		SKYBORNE_ADC_DMA_CHANNEL 	DMA_Channel_0
+#define		SKYBORNE_ADC_DMA_IRQn		DMA2_Stream0_IRQn
 #define		SKYBORNE_ADC_DMA_IRQHandler	DMA2_Stream0_IRQHandler
 #define		SKYBORNE_ADC_DMA_TC_FLAG	DMA_IT_TCIF0
 #define		SKYBORNE_ADC_DMA_CLK		RCC_AHB1Periph_DMA2
@@ -124,6 +125,7 @@ typedef enum
 //-------------º¯ÊýÉùÃ÷---------------------------
 
 void ana_inputs_init(void);
+void ana_inputs_sample_start(void);
 void ana_inputs_adc_dma_irq_handler_callback(void);
 
 #endif

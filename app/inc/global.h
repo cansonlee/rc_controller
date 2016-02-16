@@ -34,7 +34,7 @@ typedef struct
 {
 	uint8_t cmd;
 	uint8_t len;
-	uint8_t msg[MAX_MSG_BUF_LEN];
+	uint16_t msg[MAX_MSG_BUF_LEN];
 }MSG_QUEUE_t;
 
 

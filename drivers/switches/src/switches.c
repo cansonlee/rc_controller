@@ -16,65 +16,65 @@ void switches_regist(void)
 	
 	//²¦¶¯¿ª¹Ø
 	//SA
-	RCC_AHB1PeriphResetCmd(SW_SA_H_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SA_H_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SA_H_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SA_H_PORT, &GPIO_InitStructure);
 
-	RCC_AHB1PeriphResetCmd(SW_SA_L_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SA_L_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SA_L_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SA_L_PORT, &GPIO_InitStructure);
 
 	//SB
-	RCC_AHB1PeriphResetCmd(SW_SB_H_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SB_H_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SB_H_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SB_H_PORT, &GPIO_InitStructure);
 
-	RCC_AHB1PeriphResetCmd(SW_SB_L_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SB_L_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SB_L_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SB_L_PORT, &GPIO_InitStructure);
 
 	//SC
-	RCC_AHB1PeriphResetCmd(SW_SC_H_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SC_H_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SC_H_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SC_H_PORT, &GPIO_InitStructure);
 
-	RCC_AHB1PeriphResetCmd(SW_SC_L_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SC_L_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SC_L_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SC_L_PORT, &GPIO_InitStructure);
 
 	//SD
-	RCC_AHB1PeriphResetCmd(SW_SD_H_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SD_H_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SD_H_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SD_H_PORT, &GPIO_InitStructure);
 
-	RCC_AHB1PeriphResetCmd(SW_SD_L_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SD_L_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SD_L_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SD_L_PORT, &GPIO_InitStructure);
 
 	//SE
-	RCC_AHB1PeriphResetCmd(SW_SE_H_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SE_H_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SE_H_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(SW_SE_H_PORT, &GPIO_InitStructure);
 
-	RCC_AHB1PeriphResetCmd(SW_SE_L_GPIO_CLK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SW_SE_L_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SW_SE_L_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;

@@ -53,7 +53,7 @@ void main(void)
 	delay_init();
 	uarts_init();
     pwr_init();
-//    ana_inputs_init();
+    ana_inputs_init();
 	lcd_init();
 	keys_init();
     //打开CPU电源
@@ -194,8 +194,8 @@ void main(void)
 //    osThreadDef(commTask, Task_comm, osPriorityNormal, 0, 1024);
 //    Task_commHandle = osThreadCreate(osThread(commTask), NULL);
 
-//	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
-//    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
+	osThreadDef(adcsTask, Task_ADCs, osPriorityNormal, 0, 1024);
+    Task_ADCsHandle = osThreadCreate(osThread(adcsTask), NULL);
 
 //	osThreadDef(dispTask, Task_disp, osPriorityNormal, 0, 1024);
 //    Task_dispHandle = osThreadCreate(osThread(dispTask), NULL);
@@ -208,8 +208,8 @@ void main(void)
 //	osMessageQDef(toComm, 5, MSG_QUEUE_t);
 //	xQueue_ToComm = osMessageCreate(osMessageQ(toComm), NULL);
 	
-//	osMessageQDef(toADCs, 1, MSG_QUEUE_t);
-//	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
+	osMessageQDef(toADCs, 1, MSG_QUEUE_t);
+	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
 	
 //	osMessageQDef(toDisp, 5, MSG_QUEUE_t);
 //	xQueue_ToDisp = osMessageCreate(osMessageQ(toDisp), NULL);
@@ -219,8 +219,8 @@ void main(void)
 //	osSemaphoreDef(forComm);
 //	osSemaphoreEmptyCreate(osSemaphore(forComm));
 
-//	osSemaphoreDef(forADCs);
-//	osSemaphoreEmptyCreate(osSemaphore(forADCs));
+	osSemaphoreDef(forADCs);
+	osSemaphoreEmptyCreate(osSemaphore(forADCs));
 
     //printf("tasks hava created, os starting ...\r\n");
     /* Start scheduler */
