@@ -3,38 +3,54 @@
 
 
 
-
-uint32_t		msDlyCnter;
-
-
-
 /***************************************************************************************************
- * @fn      msConter
+ * @fn      delay_init
  *
- * @brief   ms计数，在SysTick_Handler中调用
+ * @brief   延时计数器初始化
  * @param   NULL
  * @return  null
  ***************************************************************************************************/ 
-void msConter(void)
+void delay_init(void)
 {
-	msDlyCnter++;	
+  // Timer13
+  RCC->APB1ENR |= RCC_APB1ENR_TIM13EN;           // Enable clock
+  TIM13->PSC = (SystemCoreClock/2) / 10000000 - 1;      // 0.1uS 
+  TIM13->CCER = 0;
+  TIM13->CCMR1 = 0;
+  TIM13->CR1 = 0x02;
+  TIM13->DIER = 0;
+}
+
+/***************************************************************************************************
+ * @fn      delay_01us
+ *
+ * @brief   延时0.1us
+ * @param   NULL
+ * @return  null
+ ***************************************************************************************************/ 	
+void delay_01us(uint16_t nb)
+{
+  TIM13->EGR = 1;
+  TIM13->CNT = 0;
+  TIM13->CR1 = 0x03;
+  while(TIM13->CNT < nb);
+  TIM13->CR1 = 0x02;
 }
 
 
 /***************************************************************************************************
- * @fn      Delay_ms
+ * @fn      delay_ms
  *
- * @brief   延时n ms
- * @param   n -- 要延时的毫秒值
+ * @brief   延时1ms
+ * @param   NULL
  * @return  null
- ***************************************************************************************************/ 
-void Delay_ms(uint32_t n)
+ ***************************************************************************************************/ 	
+void delay_ms(uint32_t ms)
 {
-	uint32_t cntr;
-
-	cntr = msDlyCnter;
-	
-	while(msDlyCnter < (cntr+n));
+	while(ms--)
+	{
+		delay_01us(10000);
+	}
 }
 
 

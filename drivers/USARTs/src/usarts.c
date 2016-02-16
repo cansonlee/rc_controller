@@ -66,7 +66,7 @@ void uarts_regist(void)
 	//---------------------USART_S_PORT串口功能配置---------------------
 	//打开串口对应的外设时钟  
 	RCC_APB1PeriphClockCmd(USART_S_PORT_CLK, ENABLE); 
-
+#if 0
 	//串口发DMA配置  
 	//启动DMA时钟
 	RCC_AHB1PeriphClockCmd(USART_S_PORT_DMA_CLK, ENABLE);
@@ -139,7 +139,7 @@ void uarts_regist(void)
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(USART_S_PORT_Rx_DMA_STREAM,&DMA_InitStructure);
 	DMA_Cmd(USART_S_PORT_Rx_DMA_STREAM,ENABLE);  
-
+#endif
 
 	USART_InitStructure.USART_BaudRate = 115200;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -152,7 +152,7 @@ void uarts_regist(void)
 	  
 	//中断配置
 	USART_ITConfig(USART_S_PORT,USART_IT_TC,DISABLE);  
-	USART_ITConfig(USART_S_PORT,USART_IT_RXNE,DISABLE);
+	USART_ITConfig(USART_S_PORT,USART_IT_RXNE,ENABLE);
 	USART_ITConfig(USART_S_PORT,USART_IT_IDLE,ENABLE);
 
 	//配置UART中断  
@@ -161,14 +161,14 @@ void uarts_regist(void)
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0  
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
 	NVIC_Init(&NVIC_InitStructure);   
-
+#if 0
 	//DMA发送中断  
 	NVIC_InitStructure.NVIC_IRQChannel = USART_S_PORT_Tx_DMA_IRQn;                        			//通道设置为串口1中断  
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USART_S_PORT_Tx_DMA_NVIC_PRIORITY;       //中断占先等级
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0  
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
 	NVIC_Init(&NVIC_InitStructure);  
-
+#endif
 	//清中断
 	temp = USART_S_PORT->SR;
 	temp = USART_S_PORT->DR; //清USART_IT_IDLE标志
@@ -176,7 +176,7 @@ void uarts_regist(void)
 	//采用DMA方式发送
 //	USART_DMACmd(USART_S_PORT,USART_DMAReq_Tx,ENABLE);
 	//  //采用DMA方式接收
-	USART_DMACmd(USART_S_PORT,USART_DMAReq_Rx,ENABLE);
+//	USART_DMACmd(USART_S_PORT,USART_DMAReq_Rx,ENABLE);
 	
 	//启动串口  
 	USART_Cmd(USART_S_PORT, ENABLE); 
@@ -184,6 +184,9 @@ void uarts_regist(void)
 	//---------------------USARTdbg串口功能配置---------------------
 	//打开串口对应的外设时钟  
 	RCC_APB1PeriphClockCmd(USARTdbg_CLK, ENABLE); 	
+#if 0    
+    //启动DMA时钟
+	RCC_AHB1PeriphClockCmd(USARTdbg_DMA_CLK, ENABLE);
 	//串口发DMA配置  
 	//关闭通道
 	DMA_Cmd(USARTdbg_Tx_DMA_STREAM,DISABLE);
@@ -252,7 +255,7 @@ void uarts_regist(void)
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(USARTdbg_Rx_DMA_STREAM,&DMA_InitStructure);
 	DMA_Cmd(USARTdbg_Rx_DMA_STREAM,ENABLE); 	
-
+#endif
 	USART_InitStructure.USART_BaudRate = 115200;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
@@ -264,7 +267,7 @@ void uarts_regist(void)
 
 	//中断配置
 	USART_ITConfig(USARTdbg,USART_IT_TC,DISABLE);  
-	USART_ITConfig(USARTdbg,USART_IT_RXNE,DISABLE);
+	USART_ITConfig(USARTdbg,USART_IT_RXNE,ENABLE);
 	USART_ITConfig(USARTdbg,USART_IT_IDLE,ENABLE);
 
 	USART_ClearITPendingBit(USARTdbg, USART_IT_RXNE);
@@ -278,18 +281,18 @@ void uarts_regist(void)
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0  
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
 	NVIC_Init(&NVIC_InitStructure);  
-
+#if 0
 	//DMA发送中断  
 	NVIC_InitStructure.NVIC_IRQChannel = USARTdbg_Tx_DMA_IRQn;                        			//通道设置为串口1中断  
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = USARTdbg_Tx_DMA_NVIC_PRIORITY;       //中断占先等级
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;              //中断响应优先级0  
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;                 //打开中断  
 	NVIC_Init(&NVIC_InitStructure);  	
-	 
+#endif	 
 	//采用DMA方式发送
 //	USART_DMACmd(USARTdbg,USART_DMAReq_Tx,ENABLE);
 	//采用DMA方式接收
-	USART_DMACmd(USARTdbg,USART_DMAReq_Rx,ENABLE);
+//	USART_DMACmd(USARTdbg,USART_DMAReq_Rx,ENABLE);
 	//启动串口  
 	USART_Cmd(USARTdbg, ENABLE); 
 }
@@ -320,6 +323,7 @@ void uarts_init(void)
  ***************************************************************************************************/  
 int uarts_sport_send(uint8_t *Str, uint8_t len)
 {
+#if 0
     IF_PTR_IS_NULL_RET_NULLPTR_ERR(Str);
 	if(len > S_PORT_TX_BUFF_LEN)
 		return -1;
@@ -336,6 +340,15 @@ int uarts_sport_send(uint8_t *Str, uint8_t len)
 	DMA_Cmd(USART_S_PORT_Tx_DMA_STREAM,ENABLE);
 
 	return 0;
+#endif
+    uint16_t i;
+    for(i=0; i<len; i++)
+    {
+        USART_SendData(USART_S_PORT, Str[i]);
+
+        while (USART_GetFlagStatus(USART_S_PORT, USART_FLAG_TC) == RESET)
+        {}
+    }
 }
 
 
@@ -364,10 +377,13 @@ void uarts_sport_tx_dma_irq_handler_callback(void)
  * @param   null
  * @return  null
  ***************************************************************************************************/ 
+uint8_t     *pSport_RxBuffer = &Sport_RxBuffer[0];
+uint16_t    g_sport_rx_len;
 extern void uarts_sport_irq_handler_cb_hook(uint8_t *msg, uint16_t len);
 void uarts_sport_irq_handler_callback(void)
 {
 	uint32_t temp = 0;
+#if 0    
 	uint16_t len = 0;
     uint8_t  RxBuffer[S_PORT_RX_BUFF_LEN];
 
@@ -391,6 +407,26 @@ void uarts_sport_irq_handler_callback(void)
 
         uarts_sport_irq_handler_cb_hook(RxBuffer, len);
 	} 
+#endif
+
+    if(USART_GetITStatus(USART_S_PORT, USART_IT_RXNE) != RESET)
+	{
+		USART_ClearITPendingBit(USART_S_PORT, USART_IT_RXNE);
+        *pSport_RxBuffer++ = USART_ReceiveData(USART_S_PORT);
+        g_sport_rx_len++;
+	}
+    
+    if(USART_GetITStatus(USART_S_PORT, USART_IT_IDLE) != RESET)
+    {
+        temp = USART_S_PORT->SR;
+		temp = USART_S_PORT->DR; //清USART_IT_IDLE标志  
+		temp = temp;
+
+        uarts_sport_irq_handler_cb_hook(Sport_RxBuffer, g_sport_rx_len);
+
+        pSport_RxBuffer = &Sport_RxBuffer[0];
+        g_sport_rx_len = 0;
+    }
 }
 
 
@@ -406,6 +442,7 @@ void uarts_sport_irq_handler_callback(void)
  ***************************************************************************************************/  
 int uarts_dbg_send(uint8_t *Str, uint16_t len)
 {
+#if 0
     IF_PTR_IS_NULL_RET_NULLPTR_ERR(Str);
     
 	if(len > DBG_TX_BUF_LEN)
@@ -423,6 +460,16 @@ int uarts_dbg_send(uint8_t *Str, uint16_t len)
 	DMA_Cmd(USARTdbg_Tx_DMA_STREAM,ENABLE);
 
 	return 0;
+#endif
+    uint16_t i;
+    for(i=0; i<len; i++)
+    {
+        USART_SendData(USARTdbg, Str[i]);
+
+        while (USART_GetFlagStatus(USARTdbg, USART_FLAG_TC) == RESET)
+        {}
+    }
+
 }
 
 
@@ -452,45 +499,50 @@ void uarts_dbg_tx_dma_irq_handler_callback(void)
  * @param   null
  * @return  null
  ***************************************************************************************************/ 
+uint8_t  DGB_RxBuffer[DBG_RX_BUF_LEN];
+uint8_t  *p_DBG_Rx = &DGB_RxBuffer[0];
+uint16_t  g_dbg_rx_len;
 extern void uarts_dbg_irq_handler_cb_hook(uint8_t *msg, uint16_t len);
 void uarts_dbg_irq_handler_callback(void)
 {
 	uint32_t temp = 0;
-	uint16_t len = 0;
-    uint8_t  RxBuffer[DBG_RX_BUF_LEN];
-    
-	//printf("enter usart3 interrupt!\r\n");
+//	uint16_t len = 0;
+//    uint8_t  RxBuffer[DBG_RX_BUF_LEN];
 
 	if(USART_GetITStatus(USARTdbg, USART_IT_RXNE) != RESET)
 	{
 		USART_ClearITPendingBit(USARTdbg, USART_IT_RXNE);
-		//printf("enter usart3 RXNE interrupt!\r\n");
-		//printf("receive value is %c \r\n", USARTdbg->DR);
+        *p_DBG_Rx++ = USART_ReceiveData(USARTdbg);
+        g_dbg_rx_len++;
 	}
 	
 	if(USART_GetITStatus(USARTdbg, USART_IT_IDLE) != RESET)
 	{
-		DMA_Cmd(USARTdbg_Rx_DMA_STREAM,DISABLE);
+		//DMA_Cmd(USARTdbg_Rx_DMA_STREAM,DISABLE);
 
 		temp = USARTdbg->SR;
 		temp = USARTdbg->DR; //清USART_IT_IDLE标志  
 		temp = temp;
 
-		//printf("enter usart3 idle interrupt!\r\n");
+		printf("enter usart3 idle interrupt!, rx len:%d.\r\n", g_dbg_rx_len);
+
+        uarts_dbg_irq_handler_cb_hook(DGB_RxBuffer, g_dbg_rx_len);
+        p_DBG_Rx = &DGB_RxBuffer[0];
+        g_dbg_rx_len = 0;
 
 		//接收字节数
-		len = DBG_RX_BUF_LEN - DMA_GetCurrDataCounter(USARTdbg_Rx_DMA_STREAM);
+		//len = DBG_RX_BUF_LEN - DMA_GetCurrDataCounter(USARTdbg_Rx_DMA_STREAM);
 
-		memcpy(RxBuffer, dbg_RxBuffer, len);
+		//memcpy(RxBuffer, dbg_RxBuffer, len);
 
 		//printf("receive msg len is %d \r\n", len);
 
 		//设置传输数据长度
-		DMA_SetCurrDataCounter(USARTdbg_Rx_DMA_STREAM,DBG_RX_BUF_LEN);
+		//DMA_SetCurrDataCounter(USARTdbg_Rx_DMA_STREAM,DBG_RX_BUF_LEN);
 		//打开DMA
-		DMA_Cmd(USARTdbg_Rx_DMA_STREAM,ENABLE);
+		//DMA_Cmd(USARTdbg_Rx_DMA_STREAM,ENABLE);
 
-        uarts_dbg_irq_handler_cb_hook(RxBuffer, len);
+       // uarts_dbg_irq_handler_cb_hook(RxBuffer, len);
 	} 
 }
 

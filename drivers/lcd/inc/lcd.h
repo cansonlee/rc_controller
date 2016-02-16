@@ -73,22 +73,33 @@
 
 
 //---------------宏定义--------------------------------------
+
+#define		LCD_A0_LOW()			{GPIO_ResetBits(LCD_A0_PORT, LCD_A0_PIN);}
+#define		LCD_A0_HIGH()			{GPIO_SetBits(LCD_A0_PORT, LCD_A0_PIN);}
+
+#define		LCD_NCS_LOW()			{GPIO_ResetBits(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN);}
+#define		LCD_NCS_HIGH()			{GPIO_SetBits(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN);}
+
+#define		LCD_RST_LOW()			{GPIO_ResetBits(LCD_RST_PORT, LCD_RST_PIN);}
+#define		LCD_RST_HIGH()			{GPIO_SetBits(LCD_RST_PORT, LCD_RST_PIN);}
+
 #define		LCD_W         			212
 #define 	LCD_H         			64
-#define		LCD_TX_BUFF_SIZE		(LCD_W*LCD_H/8)				//(LCD_W*LCD_H*4/8)
+#define		LCD_TX_BUFF_SIZE		(LCD_W*LCD_H/8*4)				//(LCD_W*LCD_H*4/8)
 
 //---------------外部变量--------------------------------------
 extern uint8_t				lcdTxBuff[LCD_H/8][LCD_W];
 
 //---------------函数输出--------------------------------------
 void lcd_init(void);
+int lcd_data_burst_write(uint8_t *buf, uint16_t len);
 int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte);
 int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
-int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t hight);
+int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
 int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte);
 int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
-int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t hight);
-int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t hight);
+int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
+int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t height);
 int lcd_clean(void);
 
 

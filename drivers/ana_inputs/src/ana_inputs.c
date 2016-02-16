@@ -134,15 +134,7 @@ void ana_inputs_regist(void)
 	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-	DMA_Init(SKYBORNE_ADC_DMA_STREAM, &DMA_InitStructure);	
-	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-
-	ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-	ADC_DMACmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
-	DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);
-	DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG);
-//	ADC_ITConfig(SKYBORNE_ADC, ADC_IT_EOC, ENABLE);
-//	ADC_ClearITPendingBit(SKYBORNE_ADC, ADC_IT_EOC);	
+	DMA_Init(SKYBORNE_ADC_DMA_STREAM, &DMA_InitStructure);				
 
 	//NVIC
 	NVIC_InitStructure.NVIC_IRQChannel = SKYBORNE_ADC_DMA_CHANNEL;
@@ -152,6 +144,15 @@ void ana_inputs_regist(void)
 	NVIC_Init(&NVIC_InitStructure);
 
 	ADC_Cmd(SKYBORNE_ADC, ENABLE);
+	
+	DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG);
+	ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
+	ADC_DMACmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
+	DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);	
+//	ADC_ITConfig(SKYBORNE_ADC, ADC_IT_EOC, ENABLE);
+//	ADC_ClearITPendingBit(SKYBORNE_ADC, ADC_IT_EOC);
+	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
+	
 	ADC_SoftwareStartConv(SKYBORNE_ADC);
 }
 
@@ -180,17 +181,24 @@ extern void ana_inputs_adc_dma_irq_handler_cb_hook(uint16_t *adcs_value, uint8_t
 void ana_inputs_adc_dma_irq_handler_callback(void)	
 {
 	uint16_t adc_buf[ADC_MODULE_NUMBER];
-	
+
+    printf("go into adc dma interrupt!at %d\r\n", __LINE__);
 	if(DMA_GetITStatus(SKYBORNE_ADC_DMA_CHANNEL, SKYBORNE_ADC_DMA_TC_FLAG) != RESET)
 	{
-		ADC_ClearFlag(SKYBORNE_ADC, ADC_FLAG_EOC | ADC_FLAG_STRT | ADC_FLAG_OVR);
+		DMA_Cmd(SKYBORNE_ADC_DMA_CHANNEL,DISABLE);
 		DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_CHANNEL, SKYBORNE_ADC_DMA_TC_FLAG);
-		DMA_Cmd(SKYBORNE_ADC_DMA_CHANNEL,DISABLE);		
+		ADC_ClearFlag(SKYBORNE_ADC, ADC_FLAG_EOC | ADC_FLAG_STRT | ADC_FLAG_OVR);				
 
 		memcpy(adc_buf, g_adcs_value, ADC_MODULE_NUMBER);
+        printf("RV val=%d at %d\r\n",g_adcs_value[0], __LINE__);
 		
 		//开启下一次转换和传送
 		DMA_SetCurrDataCounter(SKYBORNE_ADC_DMA_CHANNEL, ADC_MODULE_NUMBER);
+
+		ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
+		ADC_DMACmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
+		DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);
+		
 		DMA_Cmd(SKYBORNE_ADC_DMA_CHANNEL,ENABLE);
 		ADC_SoftwareStartConv(SKYBORNE_ADC);
 

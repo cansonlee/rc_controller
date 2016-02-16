@@ -8,7 +8,9 @@
 
 /////////////////////全局变量定义///////////////////////////////////////
 uint8_t				g_LcdWriteBusyFlag;					//LCD写繁忙标志
-uint8_t				g_lcdTxBuff[LCD_H/8][LCD_W];			//LCD写缓存			
+//uint8_t				g_lcdTxBuff[LCD_H/8][LCD_W];			//LCD写缓存	
+uint8_t				g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCD写缓存	
+
 
 int lcd_cursor_addr_set(uint8_t x, uint8_t y);
 
@@ -56,12 +58,12 @@ void lcd_regist(void)
 
 	RCC_AHB1PeriphClockCmd(LCD_SPI_NCS_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = LCD_SPI_NCS_PIN ;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_Init(LCD_SPI_NCS_PORT, &GPIO_InitStructure);
-	GPIO_PinAFConfig(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN_SOURCE, LCD_SPI_NCS_GPIO_AF);
+	//GPIO_PinAFConfig(LCD_SPI_NCS_PORT, LCD_SPI_NCS_PIN_SOURCE, LCD_SPI_NCS_GPIO_AF);
 
 	//A0端口配置
 	RCC_AHB1PeriphClockCmd(LCD_A0_GPIO_CLK, ENABLE);
@@ -89,7 +91,7 @@ void lcd_regist(void)
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Hard;
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
@@ -97,12 +99,13 @@ void lcd_regist(void)
 //	SPI_I2S_ITConfig(LCD_SPI_MASTER,SPI_I2S_IT_TXE,DISABLE);
 //	SPI_I2S_ITConfig(LCD_SPI_MASTER,SPI_I2S_IT_RXNE,DISABLE);
 	/* Enable SPI_MASTER NSS output for master mode */
-	SPI_SSOutputCmd(LCD_SPI_MASTER, ENABLE);
+	SPI_SSOutputCmd(LCD_SPI_MASTER, DISABLE);
 	/* Enable SPI_MASTER DMA TX */
 	RCC_AHB1PeriphClockCmd(LCD_DMA_CLK, ENABLE);
+	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
 	DMA_DeInit(LCD_DMA_STREAM);
 	DMA_InitStructure.DMA_Channel = LCD_DMA_CHANNLE;
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)LCD_SPI_MASTER->DR;
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&LCD_SPI_MASTER->DR);
 	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)g_lcdTxBuff;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
 	DMA_InitStructure.DMA_BufferSize = LCD_TX_BUFF_SIZE;
@@ -111,12 +114,12 @@ void lcd_regist(void)
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;	
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;		
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;         
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(LCD_DMA_STREAM, &DMA_InitStructure);
-	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
-	SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,ENABLE);
-	DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, ENABLE);
-	DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
 
 	//中断控制
 	NVIC_InitStructure.NVIC_IRQChannel = LCD_DMA_IRQn;
@@ -139,13 +142,15 @@ void lcd_regist(void)
  ***************************************************************************************************/  
 int lcd_cmd_write(uint8_t cmd)
 {
-	GPIO_ResetBits(LCD_A0_PORT, LCD_A0_PIN);
+	LCD_A0_LOW();
+	LCD_NCS_LOW()
 	while ( ( LCD_SPI_MASTER->SR & SPI_SR_TXE ) == 0 ) 
 	{};
   	(void)LCD_SPI_MASTER->DR ;		// Clear receive
   	LCD_SPI_MASTER->DR = cmd ;
   	while ( ( LCD_SPI_MASTER->SR & SPI_SR_RXNE ) == 0 ) 
 	{};
+	LCD_NCS_HIGH();
 
 	return 0;
 }
@@ -159,14 +164,16 @@ int lcd_cmd_write(uint8_t cmd)
  ***************************************************************************************************/  
 void lcd_data_write(uint8_t data)
 {
-	GPIO_SetBits(LCD_A0_PORT, LCD_A0_PIN);
+	LCD_A0_HIGH();
+	LCD_NCS_LOW()
 	while ( ( LCD_SPI_MASTER->SR & SPI_SR_TXE ) == 0 ) 
 	{};
   	(void)LCD_SPI_MASTER->DR ;		// Clear receive
   	LCD_SPI_MASTER->DR = data ;
   	while ( ( LCD_SPI_MASTER->SR & SPI_SR_RXNE ) == 0 ) 
 	{};
-
+	LCD_NCS_HIGH();
+	
 	return 0;
 }
 
@@ -187,11 +194,13 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
 
 	if(len > LCD_TX_BUFF_SIZE)
 	{
+		printf("lcd write lenth is too large,return @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 		return -1;
 	}	
 	
 	if(g_LcdWriteBusyFlag)
 	{
+		printf("lcd is busy, return @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 		return 1;
 	}		
 
@@ -199,11 +208,23 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
 
 	lcd_cursor_addr_set(0,0);		
 
-	GPIO_SetBits(LCD_A0_PORT, LCD_A0_PIN);
-	
+	LCD_A0_HIGH();
+	LCD_NCS_LOW();
+
+	//启动DMA
+	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
+	DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
+
 	memcpy(g_lcdTxBuff, buf, len);
 	DMA_SetCurrDataCounter(LCD_DMA_STREAM, len);
+	
+	SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,ENABLE);
+	DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, ENABLE);		
+	
 	DMA_Cmd(LCD_DMA_STREAM,ENABLE);
+
+	printf("begin lcd dma write @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+	printf(" SPI3->CR1:%#x, SPI3->CR2:%#x, SPI3->SR:%#x, DMA1_Stream7->CR:%#x, DMA1->HIFCR:%#x\r\n", SPI3->CR1, SPI3->CR2, SPI3->SR, DMA1_Stream7->CR, DMA1->HIFCR);
 	
 	return 0;
 }
@@ -219,9 +240,22 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
 {
 	  if(DMA_GetITStatus(LCD_DMA_STREAM, LCD_DMA_TC_FLAG) != RESET)
 	  {
+	 	DMA_Cmd(LCD_DMA_STREAM,DISABLE);
 	    DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
-	    DMA_Cmd(LCD_DMA_STREAM,DISABLE);
+		DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, DISABLE);
+	    SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,DISABLE);
+
+		while ( LCD_SPI_MASTER->SR & SPI_SR_BSY ) 
+		{
+		    /* Wait for SPI to finish sending data 
+		    The DMA TX End interrupt comes two bytes before the end of SPI transmission,
+		    therefore we have to wait here.
+		    */
+		}
+		LCD_NCS_HIGH();
+  
 		g_LcdWriteBusyFlag = 0;
+		printf("enter in lcd dma irq @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 	  }
 }
 
@@ -256,19 +290,20 @@ void lcd_init(void)
 {
 	lcd_regist();
 
+	
 	//背光开启
 	GPIO_SetBits(LCD_BL_PORT, LCD_BL_PIN);
 	GPIO_SetBits(LCD_BLW_PORT, LCD_BLW_PIN);
 	
 	//LCD RST
-	GPIO_ResetBits(LCD_RST_PORT, LCD_RST_PIN);	
-	Delay_ms(1);
-	GPIO_SetBits(LCD_RST_PORT, LCD_RST_PIN);
-	Delay_ms(300);
+	LCD_RST_LOW();	
+	delay_ms(1);
+	LCD_RST_HIGH();
+	delay_ms(300);
 
 	//LCD 寄存器
 	lcd_cmd_write(0x2F);   //Internal pump control
-	Delay_ms(20);
+	delay_ms(20);
 	lcd_cmd_write(0x24);   //Temperature compensation
 	lcd_cmd_write(0xE9);   //set bias=1/10
 	lcd_cmd_write(0x81);   //Set Vop
@@ -277,14 +312,16 @@ void lcd_init(void)
 	lcd_cmd_write(0x28);   //set pannel loading
 	lcd_cmd_write(0x40);   //scroll line LSB
 	lcd_cmd_write(0x50);   //SCROLL LINE MSB
-	lcd_cmd_write(0x89);   //ram address control
+//	lcd_cmd_write(0x89);   //ram address control
+	lcd_cmd_write(0x8B);   //ram address control, PAGE increment first
 	lcd_cmd_write(0xC0);   //LCD mapping control
-	lcd_cmd_write(0x04);   //MX=0,MY=1
+//	lcd_cmd_write(0x04);   //MX=0,MY=1
+	lcd_cmd_write(0x01);   //MX=0,MY=0,MSF=1
 	lcd_cmd_write(0xD0);   //DISPLAY PATTERN = 16-SCALE GRAY
 	lcd_cmd_write(0xF1);   //SET COM end
 	lcd_cmd_write(0x3F);   //64
 
-	lcd_cmd_write(0xF8);   //Set Window Program Disable.
+	lcd_cmd_write(0xF8);   //Set Window Program inside.
 
 	lcd_cmd_write(0xF5);   //starting row address of RAM program window.PAGE1
 	lcd_cmd_write(0x00);
@@ -292,11 +329,14 @@ void lcd_init(void)
 	lcd_cmd_write(0x1F);
 	lcd_cmd_write(0xF4);   //start column address of RAM program window.
 	lcd_cmd_write(0x00);
+//	lcd_cmd_write(0xEF);
 	lcd_cmd_write(0xF6);   //end column address of RAM program window.SEG212
 	lcd_cmd_write(0xD3);
+//	lcd_cmd_write(0x1B);
 
 	lcd_cmd_write(0xAF);	//dc2=1, IC into exit SLEEP MODE, dc3=1 gray=ON, dc4=1 Green Enhanc mode disabled
-  	Delay_ms(20);      //needed for internal DC-DC converter startup
+  	delay_ms(20);      //needed for internal DC-DC converter startup
+  	printf("lcd init over! @ %s,%s,%d\r\n", __FILE__, __func__, __LINE__);
 }
 
 
@@ -310,34 +350,40 @@ void lcd_init(void)
  ***************************************************************************************************/ 
 int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 {
-	uint8_t i,j,k,m;
-	uint8_t  s_cFlag;												// 字符找到标志
-	uint8_t *pDispBuff;
-	i = 0;
-	m = 0;
-	s_cFlag = 0;
+	uint8_t char_index;
+	uint8_t sec,col,page,trans_x,origin_y,dat_H4,dat_L4,Shift;
+	uint8_t *pChar;
+	
+	char_index = dispByte - ' ';
+	pChar = &ascii_0816[char_index*16];
 
-	pDispBuff = &g_lcdTxBuff[y][x];
-	do
+	origin_y = (y%2) ? (y/2 + 1) : (y/2);
+	trans_x = 211 - x;						//该款液晶原点在右上角
+
+	for(sec=0; sec<2; sec++)
 	{
-		if(LittleCharLib[i].Index[0] == dispByte)					// 扫描相符字符
+		for(col=0; col<8; col++)
 		{
-			s_cFlag = 1;
-			for(j=0;j<2;j++)															// 写2页*8列数据
+			//lcd_cursor_addr_set(x+col,origin_y+(sec*4));
+			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
+			Shift=0x80;
+			for(page=0; page<4; page++)
 			{
-				for(k=0;k<8;k++)
-				{
-					lcd_cursor_addr_set(x+k,y+j);
-					lcd_data_write(LittleCharLib[i].Mask[m]);
-					*pDispBuff = LittleCharLib[i].Mask[m];
-					m++;
-					pDispBuff++;
-				}
-				pDispBuff = &g_lcdTxBuff[y+1][x];
+				if((*pChar&Shift)==0)
+					dat_H4=0x00;
+				else 
+					dat_H4=0xf0;			
+				Shift>>=1;
+				if((*pChar&Shift)==0)
+					dat_L4=0x00;
+				else 
+					dat_L4=0x0f;
+				Shift>>=1;
+				lcd_data_write(dat_H4|dat_L4);			
 			}
+			pChar++;
 		}
-		i++;
-	}while( s_cFlag != 1 && LittleCharLib[i].Index[0] != 0xFF);		// 未找到字符或未扫描结束则继续
+	}
 }
 
 /***************************************************************************************************
@@ -360,9 +406,10 @@ int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{
 			x = 0;
-			y += 1;
+			y += 16;
 		}
-	}while(++*pCharStr);
+		pCharStr++;
+	}while(*pCharStr);
 
 	return 0;
 }
@@ -376,33 +423,41 @@ int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
  * @return  0 -- success
  *			-1 - failure
  ***************************************************************************************************/ 
-int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t hight)
+int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height)
 {
-	uint8_t i,j,t;
+	uint8_t t, col, sec, page, trans_x, origin_y;
+	uint8_t dat_H4, dat_L4, Shift;
 	
 	IF_CONDITION_TURE_RET_PARAM_ERR(width > LCD_W);
-	IF_CONDITION_TURE_RET_PARAM_ERR(hight > LCD_H);
-	IF_CONDITION_TURE_RET_PARAM_ERR(((hight%8) != 0) && (((hight%8) + 1)> LCD_H));
+	IF_CONDITION_TURE_RET_PARAM_ERR(height > LCD_H);
+	IF_CONDITION_TURE_RET_PARAM_ERR(((height%8) != 0) && (((height/8 + 1)*8)> LCD_H));
 
-	if(hight%8)
+	origin_y = (y%2) ? (y/2 + 1) : (y/2);
+	trans_x = 211 - x;						//该款液晶原点在右上角
+	t = (height%8) ? (height/8 +1) : (height/8);
+
+	for(sec=0; sec<t; sec++)
 	{
-		t = hight/8 + 1;
-	}
-	else
-	{
-		t = hight/8;
-	}
-	
-	for(j=0; j<t; j++)
-	{
-		for(i=0; i<width; i++)
+		for(col=0; col<width; col++)
 		{
-			lcd_cursor_addr_set(x+i,y+j);
-			lcd_data_write(*p_bmp);
-			if((x+i)>(LCD_W-1))						// 写满一行报错
+			//lcd_cursor_addr_set(x+col,origin_y+(sec*4));
+			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
+			Shift=0x80;
+			for(page=0; page<4; page++)
 			{
-				return -1;
+				if((*p_bmp&Shift)==0)
+					dat_H4=0x00;
+				else 
+					dat_H4=0xf0;			
+				Shift>>=1;
+				if((*p_bmp&Shift)==0)
+					dat_L4=0x00;
+				else 
+					dat_L4=0x0f;
+				Shift>>=1;
+				lcd_data_write(dat_H4|dat_L4);			
 			}
+			p_bmp++;
 		}
 	}
 	
@@ -420,34 +475,40 @@ int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t h
  ***************************************************************************************************/ 
 int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte)
 {
-	uint8_t i,j,k,m;
-	uint8_t  s_cFlag;												// 字符找到标志
-	uint8_t *pDispBuff;
-	i = 0;
-	m = 0;
-	s_cFlag = 0;
+	uint8_t char_index;
+	uint8_t sec,col,page,trans_x,origin_y,dat_H4,dat_L4,Shift;
+	uint8_t *pChar;
+	
+	char_index = dispByte - ' ';
+	pChar = &ascii_0816[char_index*16];
 
-	pDispBuff = &g_lcdTxBuff[y][x];
-	do
+	origin_y = (y%2) ? (y/2 + 1) : (y/2);
+	trans_x = 211 - x;						//该款液晶原点在右上角
+
+	for(sec=0; sec<2; sec++)
 	{
-		if(LittleCharLib[i].Index[0] == dispByte)					// 扫描相符字符
+		for(col=0; col<8; col++)
 		{
-			s_cFlag = 1;
-			for(j=0;j<2;j++)															// 写2页*8列数据
+			//lcd_cursor_addr_set(x+col,origin_y+(sec*4));
+			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
+			Shift=0x80;
+			for(page=0; page<4; page++)
 			{
-				for(k=0;k<8;k++)
-				{
-					lcd_cursor_addr_set(x+k,y+j);
-					lcd_data_write(~LittleCharLib[i].Mask[m]);
-					*pDispBuff = LittleCharLib[i].Mask[m];
-					m++;
-					pDispBuff++;
-				}
-				pDispBuff = &g_lcdTxBuff[y+1][x];
+				if(((~(*pChar))&Shift)==0)
+					dat_H4=0x00;
+				else 
+					dat_H4=0xf0;			
+				Shift>>=1;
+				if(((~(*pChar))&Shift)==0)
+					dat_L4=0x00;
+				else 
+					dat_L4=0x0f;
+				Shift>>=1;
+				lcd_data_write(dat_H4|dat_L4);			
 			}
+			pChar++;
 		}
-		i++;
-	}while( s_cFlag != 1 && LittleCharLib[i].Index[0] != 0xFF);		// 未找到字符或未扫描结束则继续
+	}
 
 	return 0;
 }
@@ -467,14 +528,15 @@ int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
 	{
 		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
 		
-		lcd_char_disp(x,y,~(*pCharStr));
+		lcd_char_inv_disp(x,y,*pCharStr);
 		x+=8;
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{
 			x = 0;
-			y += 1;
+			y += 16;
 		}
-	}while(++*pCharStr);
+		pCharStr++;
+	}while(*pCharStr);
 
 	return 0;
 }
@@ -488,33 +550,40 @@ int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
  * @return  0 -- success
  *			-1 - failure
  ***************************************************************************************************/ 
-int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t hight)
+int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height)
 {
-	uint8_t i,j,t;
+	uint8_t t, col, sec, page, trans_x, origin_y;
+	uint8_t dat_H4, dat_L4, Shift;
 	
 	IF_CONDITION_TURE_RET_PARAM_ERR(width > LCD_W);
-	IF_CONDITION_TURE_RET_PARAM_ERR(hight > LCD_H);
-	IF_CONDITION_TURE_RET_PARAM_ERR(((hight%8) != 0) && (((hight%8) + 1)> LCD_H));
+	IF_CONDITION_TURE_RET_PARAM_ERR(height > LCD_H);
+	IF_CONDITION_TURE_RET_PARAM_ERR(((height%8) != 0) && (((height/8 + 1)*8)> LCD_H));
 
-	if(hight%8)
+	origin_y = (y%2) ? (y/2 + 1) : (y/2);
+	trans_x = 211 - x;						//该款液晶原点在右上角
+	t = (height%8) ? (height/8 +1) : (height/8);
+
+	for(sec=0; sec<t; sec++)
 	{
-		t = hight/8 + 1;
-	}
-	else
-	{
-		t = hight/8;
-	}
-	
-	for(j=0; j<t; j++)
-	{
-		for(i=0; i<width; i++)
+		for(col=0; col<width; col++)
 		{
-			lcd_cursor_addr_set(x+i,y+j);
-			lcd_data_write(~(*p_bmp));
-			if((x+i)>(LCD_W-1))						// 写满一行报错
+			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
+			Shift=0x80;
+			for(page=0; page<4; page++)
 			{
-				return -1;
+				if(((~(*p_bmp))&Shift)==0)
+					dat_H4=0x00;
+				else 
+					dat_H4=0xf0;			
+				Shift>>=1;
+				if(((~(*p_bmp))&Shift)==0)
+					dat_L4=0x00;
+				else 
+					dat_L4=0x0f;
+				Shift>>=1;
+				lcd_data_write(dat_H4|dat_L4);			
 			}
+			p_bmp++;
 		}
 	}
 	
@@ -533,35 +602,31 @@ int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8
  *			-1 - failure
  ***************************************************************************************************/ 
 
-int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t hight)
+int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t height)
 {
-	uint8_t i,j,t;
+	uint8_t t, col, sec, page, trans_x, origin_y;
 	
 	IF_CONDITION_TURE_RET_PARAM_ERR(width > LCD_W);
-	IF_CONDITION_TURE_RET_PARAM_ERR(hight > LCD_H);
-	IF_CONDITION_TURE_RET_PARAM_ERR(((hight%8) != 0) && (((hight%8) + 1)> LCD_H));
+	IF_CONDITION_TURE_RET_PARAM_ERR(height > LCD_H);
+	IF_CONDITION_TURE_RET_PARAM_ERR(((height%8) != 0) && (((height/8 + 1)*8)> LCD_H));
 
-	if(hight%8)
-	{
-		t = hight/8 + 1;
-	}
-	else
-	{
-		t = hight/8;
-	}
 	
-	for(j=0; j<t; j++)
+	origin_y = (y%2) ? (y/2 + 1) : (y/2);
+	trans_x = 211 - x;						//该款液晶原点在右上角
+	t = (height%8) ? (height/8 +1) : (height/8);
+
+	for(sec=0; sec<t; sec++)
 	{
-		for(i=0; i<width; i++)
+		for(col=0; col<width; col++)
 		{
-			lcd_cursor_addr_set(x+i,y+j);
-			lcd_data_write(0);
-			if((x+i)>(LCD_W-1))						// 写满一行报错
+			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
+			for(page=0; page<4; page++)
 			{
-				return -1;
+				lcd_data_write(0x00);			
 			}
 		}
 	}
+
 	return 0;
 }
 
@@ -575,11 +640,11 @@ int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t hight)
  ***************************************************************************************************/ 
 int lcd_clean(void)
 {
-	uint8_t	 lcdSendBuff[LCD_H/8][LCD_W];
-
+	uint8_t	 lcdSendBuff[LCD_TX_BUFF_SIZE];
+	printf("before burst write@ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 	memset(lcdSendBuff, 0, sizeof(lcdSendBuff));
 	
-	lcd_data_burst_write(&lcdSendBuff[0][0], LCD_TX_BUFF_SIZE);
+	lcd_data_burst_write(lcdSendBuff, LCD_TX_BUFF_SIZE);
 	
 	return 0;
 }

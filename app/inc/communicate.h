@@ -29,6 +29,7 @@
 
 void Task_comm(void const * argument);
 
+void comm_data_send(uint8_t id, void* buf, uint8_t len);
 
 
 #endif
