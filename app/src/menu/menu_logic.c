@@ -29,9 +29,9 @@ UI_FRAME_PANEL_STRU* g_page_tbl[] = { // correspond to page id
 };
 
 PAGE_TBL_SIZE_GET_FN g_page_tbl_size[] = { // correspond to page id
+    menu_page_index_tbl_size_get,
     menu_page_channel_tbl_size_get,
-    menu_page_channel_tbl_size_get,
-    menu_page_channel_tbl_size_get,
+    menu_page_radio_tbl_size_get,
 };
 
 uint16_t g_page_next_tbl[] = { // correspond to page id
@@ -67,7 +67,7 @@ uint16_t menu_logic_page_next_get(uint16_t page_id){
 uint32_t menu_logic_page_tbl_size_get(uint16_t page_id){
     PAGE_TBL_SIZE_GET_FN fn;
     
-    if (page_id < sizeof(g_page_tbl_size)){
+    if (page_id < sizeof(g_page_tbl_size) / sizeof(g_page_tbl_size[0])){
         fn = g_page_tbl_size[page_id];
         if (fn != NULL){
             return fn();
