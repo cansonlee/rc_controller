@@ -60,7 +60,7 @@ void menu_page_change
 )
 {
     uint16_t next_page_id = menu_logic_page_next_get(page_id);
-    printf("menu page change %d\r\n", next_page_id);
+
     if (next_page_id == page_id){
         return;
     }
@@ -151,12 +151,10 @@ void menu_info_cb
     void *info
 )
 {
-    printf("menu info cb %d\r\n", op);
     switch (op)
     {
         case UI_FRAME_OP_NUM_OF_PANEL_GET:
             menu_num_of_panel_get(page_id, info);
-            printf("num of panels %d\r\n", *(uint32_t*)info);
             break;
         case UI_FRAME_OP_PANEL_INFO_GET:
             menu_panel_info_get(page_id, panel_id, info);

@@ -288,9 +288,8 @@ void ui_task
         ui_frame_display_update();
 
         key = keys_read(&key_status);
-        printf("ui task key status %d key %d\r\n", key_status, key);
-		event = key_to_event_map(key_status, key);
-        printf("ui task key map event %d", event);
+
+        event = key_to_event_map(key_status, key);
         
         fn = g_uiScreen.ev_cb;
         
