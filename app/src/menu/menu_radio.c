@@ -3,6 +3,8 @@
 
 #include "ui_frame.h"
 
+#include "ADCs.h"
+
 uint16_t menu_page_radio_tbl_size_get(void);
 void menu_page_radio_event_process
 (
@@ -86,11 +88,13 @@ void menu_page_radio_event_process
                     {
                         panel_pairing_status = 1;
                         ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, "ON ");
+                        adc_radio_pairing_req(1);
                     }
                     else
                     {
                         panel_pairing_status = 0;
                         ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, "OFF");
+                        adc_radio_pairing_end();
                     }
                     break;
                 case 4:
