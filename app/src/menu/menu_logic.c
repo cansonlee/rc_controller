@@ -21,54 +21,48 @@ extern uint16_t menu_page_channel_sw_tbl_size_get(void);
 extern void menu_page_channel_sw_event_process(uint32_t, uint16_t);
 
 
+typedef struct menu_logic_t{
+    uint16_t             next_page_id;
+    UI_FRAME_PANEL_STRU* panels;
+    
+    EVENT_FN             event_fn;
+    PAGE_TBL_SIZE_GET_FN tbl_size_fn;
+}MENU_LOGIC_STRU;
 
-EVENT_FN g_event_proc_tbl[] = { // correspond to page id
-    menu_page_index_event_process,
-    menu_page_channel_event_process,
-    menu_page_radio_event_process,
-    menu_page_channel_sw_event_process,
+MENU_LOGIC_STRU g_menu_logic_tbl[] = { // correspond to page id
+    {MENU_PAGE_CHANNEL_ID, g_page_index_tbl, 
+        menu_page_index_event_process, menu_page_index_tbl_size_get},
+    {MENU_PAGE_CHANNEL_SW_ID, g_page_channel_tbl, 
+        menu_page_channel_event_process, menu_page_channel_tbl_size_get},
+    {MENU_PAGE_INDEX_ID, g_page_radio_tbl,
+        menu_page_radio_event_process, menu_page_radio_tbl_size_get},
+    {MENU_PAGE_RADIO_ID, g_page_channel_sw_tbl,
+        menu_page_channel_sw_event_process, menu_page_channel_sw_tbl_size_get},
 };
 
-UI_FRAME_PANEL_STRU* g_page_tbl[] = { // correspond to page id
-    g_page_index_tbl,
-    g_page_channel_tbl,
-    g_page_radio_tbl,
-    g_page_channel_sw_tbl,
-};
 
-PAGE_TBL_SIZE_GET_FN g_page_tbl_size[] = { // correspond to page id
-    menu_page_index_tbl_size_get,
-    menu_page_channel_tbl_size_get,
-    menu_page_radio_tbl_size_get,
-    menu_page_channel_sw_tbl_size_get,
-};
-
-uint16_t g_page_next_tbl[] = { // correspond to page id
-    MENU_PAGE_CHANNEL_ID,      // index -> channel
-    MENU_PAGE_CHANNEL_SW_ID,   // channel -> channel sw
-    MENU_PAGE_INDEX_ID,        // radio -> index
-    MENU_PAGE_RADIO_ID,        // channel sw -> radio
-};
+#define IS_PAGE_ID_VALID(page_id) \
+    ((page_id) < sizeof(g_menu_logic_tbl) / sizeof(g_menu_logic_tbl[0]))
 
 EVENT_FN menu_logic_event_proc_get(uint16_t page_id){
-    if (page_id < sizeof(g_event_proc_tbl) / sizeof(g_event_proc_tbl[0])){
-        return g_event_proc_tbl[page_id];
+    if (IS_PAGE_ID_VALID(page_id)){
+        return g_menu_logic_tbl[page_id].event_fn;
     }
 
     return NULL;
 }
 
 UI_FRAME_PANEL_STRU* menu_logic_page_get(uint16_t page_id){
-    if (page_id < sizeof(g_page_tbl) / sizeof(g_page_tbl[0])){
-        return g_page_tbl[page_id];
+    if (IS_PAGE_ID_VALID(page_id)){
+        return g_menu_logic_tbl[page_id].panels;
     }
 
     return NULL;
 }
 
 uint16_t menu_logic_page_next_get(uint16_t page_id){
-    if (page_id < sizeof(g_page_next_tbl) / sizeof(g_page_next_tbl[0])){
-        return g_page_next_tbl[page_id];
+    if (IS_PAGE_ID_VALID(page_id)){
+        return g_menu_logic_tbl[page_id].next_page_id;
     }
 
     return page_id;
@@ -77,8 +71,8 @@ uint16_t menu_logic_page_next_get(uint16_t page_id){
 uint32_t menu_logic_page_tbl_size_get(uint16_t page_id){
     PAGE_TBL_SIZE_GET_FN fn;
     
-    if (page_id < sizeof(g_page_tbl_size) / sizeof(g_page_tbl_size[0])){
-        fn = g_page_tbl_size[page_id];
+    if (IS_PAGE_ID_VALID(page_id)){
+        fn = g_menu_logic_tbl[page_id].tbl_size_fn;
         if (fn != NULL){
             return fn();
         }
