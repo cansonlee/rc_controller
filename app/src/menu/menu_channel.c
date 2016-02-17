@@ -1,4 +1,6 @@
 
+#include <stdio.h>
+
 #include "cmsis_os.h"
 
 #include "ui_frame.h"
@@ -85,8 +87,6 @@ void menu_page_channel_event_process
 
 void _menu_page_channel_value_update(uint16_t panel_id, uint16_t val){
     menu_logic_sprintf_uint16(9999, val, 
-        g_page_channel_tbl[panel_id].content);
-    ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
         g_page_channel_tbl[panel_id].content);
 }
 
