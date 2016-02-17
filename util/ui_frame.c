@@ -319,22 +319,22 @@ uint32_t key_to_event_map(KEY_STATUS key_status, KEY_VAL key){
     switch(key)
     {
         case KEY_MENU:
-            event = UI_FRAME_KEY_MENU;
+            event = UI_FRAME_EVENT_KEY_MENU;
             break;
         case KEY_PAGE:
-            event = UI_FRAME_KEY_PAGE;
+            event = UI_FRAME_EVENT_KEY_PAGE;
             break;
         case KEY_EXIT:
-            event = UI_FRAME_KEY_EXIT;
+            event = UI_FRAME_EVENT_KEY_EXIT;
             break;
         case KEY_PLUS:
-            event = UI_FRAME_KEY_UP;
+            event = UI_FRAME_EVENT_KEY_UP;
             break;
         case KEY_MINUS:
-            event = UI_FRAME_KEY_DOWN;
+            event = UI_FRAME_EVENT_KEY_DOWN;
             break;
         case KEY_ENTER:
-            event = UI_FRAME_KEY_ENTER;
+            event = UI_FRAME_EVENT_KEY_ENTER;
             break;
         default:
             break;

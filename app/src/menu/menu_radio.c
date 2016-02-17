@@ -38,7 +38,7 @@ void menu_page_radio_event_process
     
     switch (event)
     {
-        case UI_FRAME_KEY_UP:
+        case UI_FRAME_EVENT_KEY_UP:
             switch (panel_id)
             {
                 case UI_FRAME_PANEL_ID_INVALID:
@@ -58,7 +58,7 @@ void menu_page_radio_event_process
             ui_frame_panel_disp_type_set(next_panel_id, UI_FRAME_PANEL_DISPLAY_STATE_INV);
             ui_frame_panel_change(next_panel_id);
             break;
-        case UI_FRAME_KEY_DOWN:
+        case UI_FRAME_EVENT_KEY_DOWN:
             switch (panel_id)
             {
                 case UI_FRAME_PANEL_ID_INVALID:
@@ -78,7 +78,7 @@ void menu_page_radio_event_process
             ui_frame_panel_disp_type_set(next_panel_id, UI_FRAME_PANEL_DISPLAY_STATE_INV);
             ui_frame_panel_change(next_panel_id);
             break;
-        case UI_FRAME_KEY_ENTER:
+        case UI_FRAME_EVENT_KEY_ENTER:
             switch (panel_id)
             {
                 case 2:
@@ -114,8 +114,8 @@ void menu_page_radio_event_process
                     break;
                     
             }
-        case UI_FRAME_KEY_EXIT:
-        case UI_FRAME_KEY_MENU:
+        case UI_FRAME_EVENT_KEY_EXIT:
+        case UI_FRAME_EVENT_KEY_MENU:
         default:
             break;
     }

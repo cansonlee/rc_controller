@@ -47,12 +47,12 @@ void menu_page_channel_event_process
     
     switch (event)
     {
-        case UI_FRAME_KEY_UP:
-        case UI_FRAME_KEY_DOWN:
-        case UI_FRAME_KEY_ENTER:
+        case UI_FRAME_EVENT_KEY_UP:
+        case UI_FRAME_EVENT_KEY_DOWN:
+        case UI_FRAME_EVENT_KEY_ENTER:
             break;
 
-        case UI_FRAME_KEY_EXIT:
+        case UI_FRAME_EVENT_KEY_EXIT:
             // return to index
             ui_frame_page_change(MENU_PAGE_INDEX_ID);
             break;

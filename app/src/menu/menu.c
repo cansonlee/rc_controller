@@ -96,10 +96,10 @@ void menu_event_process
 
     switch (event)
     {
-        case UI_FRAME_KEY_MENU:
+        case UI_FRAME_EVENT_KEY_MENU:
             // enter setup page
             break;
-        case UI_FRAME_KEY_PAGE:
+        case UI_FRAME_EVENT_KEY_PAGE:
             menu_page_change(page_id);
             break;
         default:
