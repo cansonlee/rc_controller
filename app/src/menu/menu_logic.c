@@ -87,4 +87,18 @@ uint8_t is_panel_id_valid(uint16_t page_id, uint16_t panel_id){
     return 0;
 }
 
+void menu_logic_sprintf_uint16(uint16_t max, uint16_t val, char* out){
+
+    if (out == NULL){
+        return;
+    }
+    
+    if (val > max){
+        val = max;
+    }
+
+    sprintf(out, "%d", val);
+
+    return;
+}
 

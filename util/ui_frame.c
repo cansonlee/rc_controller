@@ -292,8 +292,14 @@ void ui_task
         event = key_to_event_map(key_status, key);
         
         fn = g_uiScreen.ev_cb;
+
+        if (fn == NULL){
+            continue;
+        }
+
+        fn(UI_FRAME_EVENT_DATA_UPDATE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
         
-        if ((NULL != fn) && (0 != event))
+        if (0 != event)
         {
             fn(event, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
         }
