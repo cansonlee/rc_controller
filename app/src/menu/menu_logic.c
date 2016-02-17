@@ -46,8 +46,8 @@ PAGE_TBL_SIZE_GET_FN g_page_tbl_size[] = { // correspond to page id
 uint16_t g_page_next_tbl[] = { // correspond to page id
     MENU_PAGE_CHANNEL_ID,      // index -> channel
     MENU_PAGE_CHANNEL_SW_ID,   // channel -> channel sw
-    MENU_PAGE_RADIO_ID,        // channel sw -> radio
     MENU_PAGE_INDEX_ID,        // radio -> index
+    MENU_PAGE_RADIO_ID,        // channel sw -> radio
 };
 
 EVENT_FN menu_logic_event_proc_get(uint16_t page_id){
@@ -111,4 +111,16 @@ void menu_logic_sprintf_uint16(uint16_t max, uint16_t val, char* out){
 
     return;
 }
+
+void menu_logic_sprintf_float(char* format, float val, char* out){
+
+    if (format == NULL || out == NULL){
+        return;
+    }
+    
+    sprintf(out, format, val);
+
+    return;
+}
+
 

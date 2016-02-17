@@ -24,12 +24,12 @@
 
 
 
-
-
-
-void Task_comm(void const * argument);
-
 void comm_data_send(uint8_t id, void* buf, uint8_t len);
+float comm_mav_data_roll_get(void);
+float comm_mav_data_pitch_get(void);
+float comm_mav_data_alt_get(void);
+// return global string address or NULL
+char* comm_mav_data_flightmode_get(void);
 
 
 #endif
