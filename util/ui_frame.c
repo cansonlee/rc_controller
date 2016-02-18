@@ -298,6 +298,7 @@ void ui_task
         }
 
         fn(UI_FRAME_EVENT_DATA_UPDATE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
+		printf("g_uiScreen.cur_page_id=%d @ %s, %s, L%d \r\n",g_uiScreen.cur_page_id, __FILE__, __func__, __LINE__);
         
         if (0 != event)
         {

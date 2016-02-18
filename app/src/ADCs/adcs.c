@@ -491,6 +491,14 @@ int adc_all_in_val_get(ALL_STICK_INPUT_t *stickValue)
 	
 	portEXIT_CRITICAL();
 
+	printf("ui get inputs val @ %s, %s, L%d.\r\n", __FILE__, __func__, __LINE__);
+	for(uint8_t i=0; i<ADC_MODULE_NUMBER; i++)
+	{
+		printf("adc[%d]=%d, ", i, g_gets_adcs_val[i]);
+	}
+	printf("\r\n");
+	printf("sw val=%x\r\n",g_misc_sli_sw_value.sws_value);
+	
 	return 0;		
 }
 

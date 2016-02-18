@@ -61,18 +61,15 @@ typedef struct
 void Task_ADCs(void const * argument);
 
 
+int adc_mixer_set(MIXER_LANDING_MODE_t landingValue);
+int adc_mixer_get(MIXER_LANDING_MODE_t *p_landingValue);
+int adc_stick_cntr_val_set(void);
+int adc_stick_most_val_set_start(void);
+int adc_stick_most_val_set_end(void);
+int adc_all_in_val_get(ALL_STICK_INPUT_t *stickValue);
+int adc_radio_pairing_req(uint32_t x);
+int adc_radio_pairing_end(void);
 
-uint8_t set_mixer(MIXER_LANDING_MODE_t landingValue);
-
-MIXER_LANDING_MODE_t get_mixer(void);
-
-uint8_t set_stickCenterValue(void);
-
-uint8_t set_stickMaxMinStart(void);
-
-uint8_t set_stickMaxMinEnd(void);
-
-ALL_STICK_INPUT_t get_AllInputsValue(void);
 
 
 #endif

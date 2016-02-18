@@ -25,11 +25,11 @@ UI_FRAME_PANEL_STRU g_page_channel_tbl[] =
     {0,    0,  0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_INV,    "PAGE 2"},
 
     {0,    16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SRV"},
-    {32,   16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {32,   16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "9999"},
     {72,   16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SLV"},
     {104,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
     {144,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "RLU"},
-    {176,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {176,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "1111"},
 
     {0,    32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SRH"},
     {32,   32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
@@ -60,11 +60,11 @@ void menu_page_channel_event_process
     event = event;
 
     ALL_STICK_INPUT_t input;
-    
+    printf("enter in @ %s, %s, L%d \r\n", __FILE__, __func__, __LINE__);
     switch (event)
     {
         case UI_FRAME_EVENT_DATA_UPDATE:
-            printf("update channel adc data \r\n");
+            printf("update channel adc data @ %s, %s, L%d \r\n", __FILE__, __func__, __LINE__);
                 
             adc_all_in_val_get(&input);
             
@@ -86,7 +86,12 @@ void menu_page_channel_event_process
 }
 
 void _menu_page_channel_value_update(uint16_t panel_id, uint16_t val){
-    menu_logic_sprintf_uint16(9999, val, 
-        g_page_channel_tbl[panel_id].content);
+	char str[5] = {0,0,0,0,0};
+//    menu_logic_sprintf_uint16(9999, val, 
+//        g_page_channel_tbl[panel_id].content);
+	menu_logic_sprintf_uint16(9999, val, str);
+	printf("str is %s L:%d\r\n", str, __LINE__);
+	memcpy(g_page_channel_tbl[panel_id].content, str, 5);
+	printf("content is %s L:%d\r\n", g_page_channel_tbl[panel_id].content, __LINE__);
 }
 
