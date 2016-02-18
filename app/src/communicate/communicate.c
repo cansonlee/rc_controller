@@ -4,8 +4,9 @@
 #include "comm_protocol.h"
 
 #define RADIO_ACK_LEN 32
+#define ToDeg(x) (x*57.2957795131)	// *180/pi
 
-// note: when read, need disable interrupt
+// note: when read with memcpy, need disable interrupt
 typedef struct{
     uint8_t  is_armed;
     uint8_t  rssi;            // Receive signal strength indicator, 0: 0%, 100: 100%, 255: invalid/unknown.
@@ -33,21 +34,6 @@ static mav_data_t m_mav_data;
 
 void comm_protocol_msg_parsed_hook(comm_message_t* msg);
 void mav_data_decode(void* pBuf, mav_data_t* pstData);
-
-
-void Task_comm(void const * argument)
-{
-	//接收发射板串口信息
-
-	//解第一层协议
-
-
-	//解mavlink协议
-
-
-	//队列发送Task_disp显示
-
-}
 
 void comm_data_send(uint8_t id, void* buf, uint8_t len){
 
@@ -126,6 +112,23 @@ void mav_data_decode(void* pBuf, mav_data_t* pstData){
     _TELEMETRY_MAV_ATTITUDE_PITCH_CPY(pBuf, &pstData->pitch);   
     _TELEMETRY_MAV_HUD_HEADING_CPY(pBuf, &pstData->heading);    
     _TELEMETRY_MAV_HUD_ALT_CPY(pBuf, &pstData->alt);            
+}
+
+float comm_mav_data_roll_get(void){
+    return ToDeg(m_mav_data.roll);
+}
+
+float comm_mav_data_pitch_get(void){
+    return ToDeg(m_mav_data.pitch);
+}
+
+float comm_mav_data_alt_get(void){
+    return ToDeg(m_mav_data.alt);
+}
+
+// return global string address or NULL
+char* comm_mav_data_flightmode_get(void){
+    return m_mav_data.flight_mode;
 }
 
 //////////////end of file/////////////////////////////////////////////////////

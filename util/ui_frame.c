@@ -37,6 +37,9 @@ static int32_t ui_frame_page_create
     uint16_t page_id
 );
 
+uint32_t key_to_event_map(KEY_STATUS key_status, KEY_VAL key);
+
+
 int32_t ui_frame_screen_init
 (
     uint16_t width, 
@@ -131,7 +134,7 @@ static void ui_frame_panel_disp_state_set
     uint8_t state
 )
 {
-    printf("panel %p state %d\r\n", panel, state);
+    printf("panel %p state %d content %s\r\n", panel, state, panel->content);
     if (UI_FRAME_PANEL_DISPLAY_STATE_NORMAL == state)
     {
         lcd_str_disp(panel->x, panel->y, panel->content);         
@@ -279,62 +282,70 @@ void ui_task
     KEY_VAL key;
     argument = argument;
 
-//    lcd_init();
     for (;;)
     {
         osDelay(50);
         ui_frame_display_update();
 
-        
         key = keys_read(&key_status);
-		if(key != KEY_READY)
-		{
-	        switch (key_status)
-	        {
-	            case KEY_PRESSED:
-				case KEY_HOLD:
-					switch(key)
-					{
-						case KEY_MENU:
-							event = UI_FRAME_KEY_MENU;
-							break;
-						case KEY_PAGE:
-							event = UI_FRAME_KEY_PAGE;
-							break;
-						case KEY_EXIT:
-							event = UI_FRAME_KEY_EXIT;
-							break;
-						case KEY_PLUS:
-							event = UI_FRAME_KEY_UP;
-							break;
-						case KEY_MINUS:
-							event = UI_FRAME_KEY_DOWN;
-							break;
-						case KEY_ENTER:
-							event = UI_FRAME_KEY_ENTER;
-							break;
-					}
-					break;
-				default:
-					event = 0;
-					break;
-	            
-	        }
-		}
-		else
-		{
-			event = 0;
-		}
-        
-		
-//        event = 0;
+
+        event = key_to_event_map(key_status, key);
         
         fn = g_uiScreen.ev_cb;
+
+        if (fn == NULL){
+            continue;
+        }
+
+        fn(UI_FRAME_EVENT_DATA_UPDATE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
         
-        if ((NULL != fn) && (0 != event))
+        if (0 != event)
         {
             fn(event, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
         }
     }
+}
+
+uint32_t key_to_event_map(KEY_STATUS key_status, KEY_VAL key){
+
+    uint32_t event = 0;
+
+    if (key == KEY_READY){
+        return event;
+    }
+
+    switch(key_status){
+        case KEY_PRESSED:
+        case KEY_HOLD:
+            break;
+        default:
+            return event;
+    }
+    
+    switch(key)
+    {
+        case KEY_MENU:
+            event = UI_FRAME_EVENT_KEY_MENU;
+            break;
+        case KEY_PAGE:
+            event = UI_FRAME_EVENT_KEY_PAGE;
+            break;
+        case KEY_EXIT:
+            event = UI_FRAME_EVENT_KEY_EXIT;
+            break;
+        case KEY_PLUS:
+            event = UI_FRAME_EVENT_KEY_UP;
+            break;
+        case KEY_MINUS:
+            event = UI_FRAME_EVENT_KEY_DOWN;
+            break;
+        case KEY_ENTER:
+            event = UI_FRAME_EVENT_KEY_ENTER;
+            break;
+        default:
+            break;
+    }
+             
+    return event;
 }
 
