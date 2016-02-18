@@ -20,6 +20,10 @@ extern UI_FRAME_PANEL_STRU g_page_channel_sw_tbl[];
 extern uint16_t menu_page_channel_sw_tbl_size_get(void);
 extern void menu_page_channel_sw_event_process(uint32_t, uint16_t);
 
+extern UI_FRAME_PANEL_STRU g_page_cal_tbl[];
+extern uint16_t menu_page_cal_tbl_size_get(void);
+extern void menu_page_cal_event_process(uint32_t, uint16_t);
+
 
 typedef struct menu_logic_t{
     uint16_t             next_page_id;
@@ -34,10 +38,12 @@ MENU_LOGIC_STRU g_menu_logic_tbl[] = { // correspond to page id
         menu_page_index_event_process, menu_page_index_tbl_size_get},
     {MENU_PAGE_CHANNEL_SW_ID, g_page_channel_tbl, 
         menu_page_channel_event_process, menu_page_channel_tbl_size_get},
-    {MENU_PAGE_INDEX_ID, g_page_radio_tbl,
+    {MENU_PAGE_CAL_ID, g_page_radio_tbl,
         menu_page_radio_event_process, menu_page_radio_tbl_size_get},
     {MENU_PAGE_RADIO_ID, g_page_channel_sw_tbl,
         menu_page_channel_sw_event_process, menu_page_channel_sw_tbl_size_get},
+    {MENU_PAGE_INDEX_ID, g_page_cal_tbl,
+        menu_page_cal_event_process, menu_page_cal_tbl_size_get},
 };
 
 
