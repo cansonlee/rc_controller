@@ -19,31 +19,41 @@ void menu_page_channel_event_process
 void _menu_page_channel_value_update(uint16_t panel_id, uint16_t val);
 
 
+static uint8_t m_srv_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_srh_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_slv_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_slh_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_rlu_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_rld_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_rru_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_rrd_val_buf[5] = {'0', '0', '0', '0', 0};
+static uint8_t m_vol_val_buf[5] = {'0', '0', '0', '0', 0};
+
 UI_FRAME_PANEL_STRU g_page_channel_tbl[] = 
 {
     /* x   y   w   h   pid  datype                      ditype                               content*/
     {0,    0,  0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_INV,    "PAGE 2"},
 
     {0,    16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SRV"},
-    {32,   16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "9999"},
+    {32,   16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_srv_val_buf},
     {72,   16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SLV"},
-    {104,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {104,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_slv_val_buf},
     {144,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "RLU"},
-    {176,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "1111"},
+    {176,  16, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_rlu_val_buf},
 
     {0,    32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SRH"},
-    {32,   32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {32,   32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_srh_val_buf},
     {72,   32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "SLH"},
-    {104,  32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {104,  32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_slh_val_buf},
     {144,  32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "RLD"},
-    {176,  32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {176,  32, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_rld_val_buf},
     
     {0,    48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "RRU"},
-    {32,   48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {32,   48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_rru_val_buf},
     {72,   48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "RRD"},
-    {104,  48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {104,  48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_rrd_val_buf},
     {144,  48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "VOL"},
-    {176,  48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "0000"},
+    {176,  48, 0,  16, 0,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_vol_val_buf},
 };
 
 uint16_t menu_page_channel_tbl_size_get(void){
@@ -86,12 +96,7 @@ void menu_page_channel_event_process
 }
 
 void _menu_page_channel_value_update(uint16_t panel_id, uint16_t val){
-	char str[5] = {0,0,0,0,0};
-//    menu_logic_sprintf_uint16(9999, val, 
-//        g_page_channel_tbl[panel_id].content);
-	menu_logic_sprintf_uint16(9999, val, str);
-	printf("str is %s L:%d\r\n", str, __LINE__);
-	memcpy(g_page_channel_tbl[panel_id].content, str, 5);
-	printf("content is %s L:%d\r\n", g_page_channel_tbl[panel_id].content, __LINE__);
+	menu_logic_sprintf_uint16(9999, val, 
+        g_page_channel_tbl[panel_id].content);
 }
 

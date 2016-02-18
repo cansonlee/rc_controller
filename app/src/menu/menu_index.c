@@ -13,6 +13,9 @@ void menu_page_index_event_process
 );
 void _menu_page_index_value_update(uint16_t panel_id, uint16_t val);
 
+static uint8_t m_roll_val_buf[7]  = "----.-";
+static uint8_t m_pitch_val_buf[7] = "----.-";
+static uint8_t m_alt_val_buf[7]   = "----.-";
 
 UI_FRAME_PANEL_STRU g_page_index_tbl[] = 
 {
@@ -20,11 +23,11 @@ UI_FRAME_PANEL_STRU g_page_index_tbl[] =
     {0,    0,  0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_INV,    "PAGE 1"},
     
     {0,    16, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "ROLL"},
-    {64,   16, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "----.-"},
+    {64,   16, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_roll_val_buf},
     {0,    32, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "PITCH"},
-    {64,   32, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "----.-"},
+    {64,   32, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_pitch_val_buf},
     {0,    48, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "ALT"},
-    {64,   48, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "----.-"},
+    {64,   48, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_alt_val_buf},
 };
 
 uint16_t menu_page_index_tbl_size_get(void){
