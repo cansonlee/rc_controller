@@ -59,6 +59,9 @@ void _menu_page_index_value_update(uint16_t panel_id, uint16_t val){
     }else{
         menu_logic_sprintf_float("-3.1f", val, g_page_index_tbl[panel_id].content);
     }
+
+    ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
+        g_page_index_tbl[panel_id].content);
 }
 
 
