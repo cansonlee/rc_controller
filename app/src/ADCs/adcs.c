@@ -262,7 +262,7 @@ void Task_ADCs(void const * argument)
         {
             g_saveParaFlag = 0;
 
-            WriteFlash(ParaFlashAddr, &g_Param_To_Store, sizeof(g_Param_To_Store)/4);
+            //WriteFlash(ParaFlashAddr, &g_Param_To_Store, sizeof(g_Param_To_Store)/4);
         }
 
         
@@ -485,7 +485,7 @@ int adc_all_in_val_get(ALL_STICK_INPUT_t *stickValue)
 
 	portENTER_CRITICAL();
 	
-	memcpy(stickValue->adcs,  g_gets_adcs_val, ADC_MODULE_NUMBER);
+	memcpy(stickValue->adcs,  g_gets_adcs_val, sizeof(g_gets_adcs_val));
             
 	stickValue->SW.sws_value = g_misc_sli_sw_value.sws_value;
 	

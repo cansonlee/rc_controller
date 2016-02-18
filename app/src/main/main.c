@@ -54,6 +54,7 @@ void main(void)
 	uarts_init();
     pwr_init();
     ana_inputs_init();
+	swithes_init();
 	lcd_init();
 	keys_init();
     //打开CPU电源
