@@ -12,6 +12,8 @@
 #define     ADC_CALIB_VAL_Y2                  1500
 #define     ADC_CALIB_VAL_Y3                  2000
 
+#define		ADC_CALIB_RST_VAL				  2048
+
 #define     LOW_PASS_FILTER_PARA              0.5
 
 #define     MAX(a,b)                            (a>b ? a : b)
@@ -30,7 +32,8 @@ typedef struct
     MIXER_LANDING_MODE_t     mixer_channel_config;
 	uint16_t 				 failsafeMode;
 	uint16_t				 valid;
-    uint32_t                 rx_num;
+    uint16_t                 rx_num;
+	uint16_t				 calib_valid;
 }Param_To_Store_t;
 
 

@@ -40,8 +40,9 @@ uint16_t					g_gets_adcs_val[ADC_MODULE_NUMBER];					//其它任务获取各通道值缓存
 ///////////////////函数声明/////////////////////////////////
 Param_To_Store_t ReadFlash(uint32_t addr);
 void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len);
-int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue);;
+int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue, uint16_t enable);
 float adc_voltage_calc(uint16_t adc_val);
+void adc_calib_ram_reset(ADC_Value_Calibration_t *calib_data, uint8_t len);
 
 
 /***************************************************************************************************
@@ -54,7 +55,7 @@ float adc_voltage_calc(uint16_t adc_val);
 void Task_ADCs(void const * argument)
 {
 	uint8_t			        i;
-    uint8_t                 LastSetStickMaxMinFlag;
+    uint8_t                 LastSetStickMaxMinFlag=0;
     uint8_t                 LastRadioPairingReqFlag;
     uint8_t                 LastPairingStatusFlag;
     uint8_t                 buf[32];
@@ -65,7 +66,7 @@ void Task_ADCs(void const * argument)
 
 	//------从flash中读取校正值和失效保护参数-----------------
 	g_Param_To_Store = (Param_To_Store_t) ReadFlash(ParaFlashAddr);
-	if(g_Param_To_Store.valid != 1)			//参数无效,恢复默认值
+	if(g_Param_To_Store.valid != 0x55)			//参数无效,恢复默认值
 	{
 		for(i=0; i<(ADC_MODULE_NUMBER-1); i++)
 		{
@@ -100,33 +101,41 @@ void Task_ADCs(void const * argument)
         
 		g_Param_To_Store.failsafeMode = FAILSAFE_MODE_RTL;
         g_Param_To_Store.rx_num = 0;
+		g_Param_To_Store.calib_valid = 0;
 	}
 
     //init caibrat data
-    memset(calib_para, 1024, sizeof(calib_para));
+    adc_calib_ram_reset(calib_para, ADC_MODULE_NUMBER-1);
+	g_SetStickMaxMinFlag = 0;
 
     printf("adc task read flash over. at %d\r\n", __LINE__);
+	for(i=0; i<ADC_MODULE_NUMBER-1; i++)
+    {
+		printf("calib_para[%d].HighValue = %d, calib_para[%d].LowValue=%d @ %s, %s, %d\r\n", i, calib_para[i].HighValue, i, calib_para[i].LowValue, __FILE__, __func__, __LINE__);
+    }
     
 	for(;;)
 	{
 		ana_inputs_sample_start();
 		xQueueReceive(xQueue_ToADCs, &g_adc_msg, portMAX_DELAY);
 
-		printf("adc task receive adc value @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
-		printf("adc values: \r\n");
-		for(i=0; i<g_adc_msg.len; i++)
+		//printf("adc task receive adc value @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+		//for(i=0; i<g_adc_msg.len; i++)
+		for(i=0; i<9; i++)
 		{
 			printf("ch[%d]=%d ", i, g_adc_msg.msg[i]);
 		}
 		printf("\r\n");
         
         //遥控校准过程中
-        while(g_SetStickMaxMinFlag)    
+        if(g_SetStickMaxMinFlag)    
         {
             for(i=0; i<ADC_MODULE_NUMBER-1; i++)
             {
+            	//printf("g_adc_msg.msg[%d] = %d, calib_para[%d].HighValue = %d, calib_para[%d].LowValue=%d @ %s, %s, %d\r\n", i, g_adc_msg.msg[i], i, calib_para[i].HighValue, i, calib_para[i].LowValue, __FILE__, __func__, __LINE__);
                 calib_para[i].HighValue = MAX(calib_para[i].HighValue, g_adc_msg.msg[i]);
                 calib_para[i].LowValue = MIN(calib_para[i].LowValue, g_adc_msg.msg[i]);
+				printf("calib_para[%d].HighValue = %d, calib_para[%d].LowValue=%d @ %s, %s, %d\r\n", i, calib_para[i].HighValue, i, calib_para[i].LowValue, __FILE__, __func__, __LINE__);
             }
             LastSetStickMaxMinFlag = 1;
 
@@ -143,56 +152,44 @@ void Task_ADCs(void const * argument)
             }
             
             //init caibrat data
-            memset(calib_para, 1024, sizeof(calib_para));
+            adc_calib_ram_reset(calib_para, ADC_MODULE_NUMBER-1);
             LastSetStickMaxMinFlag = 0;
-            
+            g_Param_To_Store.calib_valid = 1;
+			
             //参数保存flash
             g_saveParaFlag = 1;
         }
-        else    //正常计算
-        {
-    		//参数计算
-    		for(i=0; i<(ADC_MODULE_NUMBER-1); i++)
-    		{		
-    			if(i <= STICK_LV)
-    			{
-    				adc_calib_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
-    							    g_Param_To_Store.ADCs_Calibrate_value[i].MidValue, g_Param_To_Store.ADCs_Calibrate_value[i].LowValue);
+		
+		//参数计算
+		for(i=0; i<(ADC_MODULE_NUMBER-1); i++)
+		{		
+			if(i <= STICK_LV)
+			{
+				adc_calib_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
+							    g_Param_To_Store.ADCs_Calibrate_value[i].MidValue, g_Param_To_Store.ADCs_Calibrate_value[i].LowValue,g_Param_To_Store.calib_valid);
 
-                    //分配前4通道
-                    g_ppm_channels[i] = g_adc_calibr_val[i];
-    			}
-    			else
-    			{
-    				adc_calib_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
-    							  (g_Param_To_Store.ADCs_Calibrate_value[i].MidValue - g_Param_To_Store.ADCs_Calibrate_value[i].LowValue)/2,
-    							   g_Param_To_Store.ADCs_Calibrate_value[i].LowValue);
+                //分配前4通道
+                g_ppm_channels[i] = g_adc_calibr_val[i];
+				printf("g_adc_calibr_val[%d] = %d, g_Param_To_Store.calib_valid=%d @ %s, %s, %d\r\n", i,  g_adc_calibr_val[i], g_Param_To_Store.calib_valid, __FILE__, __func__, __LINE__);
+			}
+			else
+			{
+				adc_calib_calc(g_adc_msg.msg[i], &g_adc_calibr_val[i], g_Param_To_Store.ADCs_Calibrate_value[i].HighValue, 
+							  (g_Param_To_Store.ADCs_Calibrate_value[i].MidValue - g_Param_To_Store.ADCs_Calibrate_value[i].LowValue)/2,
+							   g_Param_To_Store.ADCs_Calibrate_value[i].LowValue,g_Param_To_Store.calib_valid);
 
-                    g_ppm_channels[CH5_MIX + (i-STICK_LV)] = g_adc_calibr_val[i];
-    			}
-                
-                //printf("i=%d, val=%d, calib=%d. at %d\r\n", i, g_adc_msg.msg[i],g_adc_calibr_val[i], __LINE__);
-    		}
-        }
-        
+                g_ppm_channels[CH5_MIX + (i-STICK_LV)] = g_adc_calibr_val[i];
+				printf("g_adc_calibr_val[%d] = %d, g_Param_To_Store.calib_valid=%d @ %s, %s, %d\r\n", i,  g_adc_calibr_val[i], g_Param_To_Store.calib_valid, __FILE__, __func__, __LINE__);
+			}                
+            //printf("i=%d, val=%d, calib=%d. at %d\r\n", i, g_adc_msg.msg[i],g_adc_calibr_val[i], __LINE__);
+		}        
 
         //电压电量计算
         fVoltage = adc_voltage_calc(g_adc_msg.msg[ADC_MODULE_NUMBER-1]);    
-        if(fVoltage > 3.6)
-        {
-            //保持开机
-            pwr_on_off(PWR_MODULE_MAIN, PWR_ON);
-        }
-        else if(fVoltage <= 3.4)
-        {
-            //关机
-            pwr_on_off(PWR_MODULE_MAIN, PWR_OFF);
-        }
-        //printf("vol=%f, at %d\r\n", fVoltage, __LINE__);
 
         //保存新值由ui获取
         memcpy(g_gets_adcs_val, g_adc_calibr_val, ADC_MODULE_NUMBER-1);
-        g_gets_adcs_val[ADC_MODULE_NUMBER-1] = (uint16_t)fVoltage*100;
+        g_gets_adcs_val[ADC_MODULE_NUMBER-1] = (uint16_t)(fVoltage*100);
         
 		//--------------拨档开关采集---------------------
 		g_misc_sli_sw_value = switches_misc_sw_read();
@@ -285,7 +282,7 @@ void ana_inputs_adc_dma_irq_handler_cb_hook(uint16_t *adcs_value, uint8_t len)
 	portBASE_TYPE taskWoken = pdFALSE;
 
 	msg.len = len;
-	memcpy(msg.msg, adcs_value, len);
+	memcpy(msg.msg, adcs_value, len*2);
 	//both ISR and Task
 	xQueueSendFromISR(xQueue_ToADCs, &msg, &taskWoken);
 	portEND_SWITCHING_ISR(taskWoken);
@@ -349,10 +346,16 @@ void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len)
  * @return  0 -- success
  *			-1 -- failure
  ***************************************************************************************************/
-int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue)
+int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue, uint16_t enable)
 {
 	float x1,x2,x3,y1,y2,y3,y;
 
+	if(!enable)
+	{
+		*pGet = curADC;
+		return 0;
+	}
+	
 	y1 = ADC_CALIB_VAL_Y1;
 	y2 = ADC_CALIB_VAL_Y2;
 	y3 = ADC_CALIB_VAL_Y3;
@@ -428,6 +431,10 @@ int adc_stick_cntr_val_set(void)
 
     g_saveParaFlag = 1;
 
+	for(i=0; i<ADC_MODULE_NUMBER; i++)
+	{
+		printf("g_Param_To_Store.ADCs_Calibrate_value[%d].MidValue=%d @ %s, %s, %d\r\n",i, g_Param_To_Store.ADCs_Calibrate_value[i].MidValue, __FILE__, __func__, __LINE__);
+	}
 	return 0;
 }
 
@@ -491,13 +498,10 @@ int adc_all_in_val_get(ALL_STICK_INPUT_t *stickValue)
 	
 	portEXIT_CRITICAL();
 
-	printf("ui get inputs val @ %s, %s, L%d.\r\n", __FILE__, __func__, __LINE__);
-	for(uint8_t i=0; i<ADC_MODULE_NUMBER; i++)
+	for(uint8_t i=0; i<9; i++)
 	{
-		printf("adc[%d]=%d, ", i, g_gets_adcs_val[i]);
+		printf("stickValue->adcs[%d]=%d @ %s, %s, L%d\r\n", i, stickValue->adcs[i], __FILE__, __func__, __LINE__);
 	}
-	printf("\r\n");
-	printf("sw val=%x\r\n",g_misc_sli_sw_value.sws_value);
 	
 	return 0;		
 }
@@ -627,15 +631,40 @@ float adc_voltage_calc(uint16_t adc_val)
 
     t = (float)adc_val;
     
-    t = t / 4096 * 3.3 / 0.37;      // 3.3-REF   0.37 -- resistive divider ratio
+    t = t / 4096 * 3.3 / 0.175;      // 3.3-REF   0.175 -- resistive divider ratio
 
     //filter
     t = t*LOW_PASS_FILTER_PARA + (1-LOW_PASS_FILTER_PARA)*lastVolt;
 
     lastVolt = t;
 
+	if(t > 3.6)
+    {
+        //保持开机
+        pwr_on_off(PWR_MODULE_MAIN, PWR_ON);
+    }
+    else if(t <= 3.4)
+    {
+        //关机
+        pwr_on_off(PWR_MODULE_MAIN, PWR_OFF);
+    }
+
     return (float)t;
 }
 
+
+void adc_calib_ram_reset(ADC_Value_Calibration_t *calib_data, uint8_t len)
+{
+	uint8_t i;	
+
+	for(i=0; i<len; i++)
+	{
+		IF_PTR_IS_NULL_RET_NULLPTR_ERR(calib_data);
+		calib_data->HighValue = ADC_CALIB_RST_VAL;
+		calib_data->MidValue = ADC_CALIB_RST_VAL;
+		calib_data->LowValue = ADC_CALIB_RST_VAL;
+		calib_data++;
+	}
+}
 
 //////////////end of file/////////////////////////////////////////////////////

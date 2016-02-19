@@ -123,7 +123,8 @@ void DMA1_Stream6_IRQHandler(void)
 
 void ADC_IRQHandler(void)
 {
-	
+	printf("enter in adc irq, ADC1->SR=%#x @ %s, %s, %d\r\n", ADC1->SR, __FILE__, __func__, __LINE__);
+	ana_inputs_adc_dma_irq_handler_callback();	
 }
 
 void USART2_IRQHandler(void)
@@ -145,7 +146,6 @@ void DMA1_Stream7_IRQHandler(void)
 void DMA2_Stream0_IRQHandler(void)
 {
 	ana_inputs_adc_dma_irq_handler_callback();
-	printf("enter in adc dma irq @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 }
 
 

@@ -1,4 +1,6 @@
 #include "ana_inputs.h"
+#include "delay_timer.h"
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -106,6 +108,7 @@ void ana_inputs_regist(void)
 	ADC_Init(SKYBORNE_ADC, &ADC_InitStructure);
 
 	//采样排序
+	
 	ADC_RegularChannelConfig(SKYBORNE_ADC, STICK_RV_ADC_CHANNEL, STICK_RV+1, ADC_SampleTime_28Cycles);
 	ADC_RegularChannelConfig(SKYBORNE_ADC, STICK_RH_ADC_CHANNEL, STICK_RH+1, ADC_SampleTime_28Cycles);
 	ADC_RegularChannelConfig(SKYBORNE_ADC, STICK_LH_ADC_CHANNEL, STICK_LH+1, ADC_SampleTime_28Cycles);
@@ -118,6 +121,7 @@ void ana_inputs_regist(void)
 
 	//DMA init
 	RCC_AHB1PeriphClockCmd(SKYBORNE_ADC_DMA_CLK, ENABLE);
+	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM,DISABLE);
 	DMA_DeInit(SKYBORNE_ADC_DMA_STREAM);	
 	DMA_InitStructure.DMA_Channel = SKYBORNE_ADC_DMA_CHANNEL;  
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)(&SKYBORNE_ADC->DR);
@@ -130,12 +134,12 @@ void ana_inputs_regist(void)
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;         
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;         
 	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SKYBORNE_ADC_DMA_STREAM, &DMA_InitStructure);				
-
+	
 	//NVIC
 	NVIC_InitStructure.NVIC_IRQChannel = SKYBORNE_ADC_DMA_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = SKYBORNE_ADC_NVIC_PRIORITY;
@@ -144,10 +148,6 @@ void ana_inputs_regist(void)
 	NVIC_Init(&NVIC_InitStructure);
 
 	ADC_Cmd(SKYBORNE_ADC, ENABLE);
-
-
-	printf("SKYBORNE_ADC->SQR3:%#x, SQR2:%#x @ %s, %s, %d\r\n",SKYBORNE_ADC->SQR3, SKYBORNE_ADC->SQR2, __FILE__, __func__, __LINE__);
-//	printf("SKYBORNE_ADC_DMA_STREAM->CR:%#x, NDTR:%#x, HISR:%#x, LISR:%#x , FCR:%#x @ %s, %s, %d\r\n",DMA2_Stream0->CR, DMA2_Stream0->NDTR, DMA2->HISR, DMA2->LISR, DMA2_Stream0->FCR, __FILE__, __func__, __LINE__);
 }
 
 
@@ -181,7 +181,7 @@ void ana_inputs_sample_start(void)
 	ADC_DMACmd(SKYBORNE_ADC, ENABLE);
 	DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);	
 	
-	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);	
+	DMA_Cmd(SKYBORNE_ADC_DMA_STREAM, ENABLE);
 	ADC_SoftwareStartConv(SKYBORNE_ADC);
 }
 
@@ -197,30 +197,13 @@ void ana_inputs_adc_dma_irq_handler_callback(void)
 {
 	uint16_t adc_buf[ADC_MODULE_NUMBER];
 
-    printf("go into adc dma interrupt!at %d\r\n", __LINE__);
 	if(DMA_GetITStatus(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG) != RESET)
 	{
 		DMA_Cmd(SKYBORNE_ADC_DMA_STREAM,DISABLE);
 		DMA_ClearITPendingBit(SKYBORNE_ADC_DMA_STREAM, SKYBORNE_ADC_DMA_TC_FLAG);
 		ADC_ClearFlag(SKYBORNE_ADC, ADC_FLAG_EOC | ADC_FLAG_STRT | ADC_FLAG_OVR);	
-
-		printf("RV val=%d at %d\r\n",g_adcs_value[0], __LINE__);
-		ana_inputs_adc_dma_irq_handler_cb_hook(g_adcs_value, ADC_MODULE_NUMBER);	
-	
-#if 0
-		memcpy(adc_buf, g_adcs_value, ADC_MODULE_NUMBER);
-        printf("RV val=%d at %d\r\n",g_adcs_value[0], __LINE__);
 		
-		//开启下一次转换和传送
-		DMA_SetCurrDataCounter(SKYBORNE_ADC_DMA_STREAM, ADC_MODULE_NUMBER);
-
-		ADC_DMARequestAfterLastTransferCmd(SKYBORNE_ADC, ENABLE);
-		ADC_DMACmd(SKYBORNE_ADC, ENABLE);
-		DMA_ITConfig(SKYBORNE_ADC_DMA_STREAM, DMA_IT_TC, ENABLE);
-		
-		DMA_Cmd(SKYBORNE_ADC_DMA_STREAM,ENABLE);
-		ADC_SoftwareStartConv(SKYBORNE_ADC);
-#endif					
+		ana_inputs_adc_dma_irq_handler_cb_hook(g_adcs_value, ADC_MODULE_NUMBER);					
 	}
 }
 

@@ -209,8 +209,7 @@ void main(void)
 //	osMessageQDef(toComm, 5, MSG_QUEUE_t);
 //	xQueue_ToComm = osMessageCreate(osMessageQ(toComm), NULL);
 	
-	osMessageQDef(toADCs, 1, MSG_QUEUE_t);
-	xQueue_ToADCs = osMessageCreate(osMessageQ(toADCs), NULL);
+	xQueue_ToADCs = xQueueCreate(1, sizeof(MSG_QUEUE_t));
 	
 //	osMessageQDef(toDisp, 5, MSG_QUEUE_t);
 //	xQueue_ToDisp = osMessageCreate(osMessageQ(toDisp), NULL);
