@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <assert.h>
 
 #define UI_FRAME_PANEL_FLASH_TIME                (500)
 
@@ -276,11 +277,27 @@ void ui_task
     void const * argument
 )
 {
-    uint32_t event;
+    uint32_t event, splash_cnt = 0;
     ui_frame_event_cb fn;
     KEY_STATUS key_status;
     KEY_VAL key;
+    
     argument = argument;
+
+    fn = g_uiScreen.ev_cb;
+    assert(fn != NULL);
+
+    // splash
+    ui_frame_display_update();
+    for (;;){
+        osDelay(50);
+
+        splash_cnt++;
+        if (splash_cnt >= 60){ // 3s
+            fn(UI_FRAME_EVENT_KEY_PAGE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
+            break;
+        }
+    }
 
     for (;;)
     {
@@ -290,12 +307,6 @@ void ui_task
         key = keys_read(&key_status);
 
         event = key_to_event_map(key_status, key);
-        
-        fn = g_uiScreen.ev_cb;
-
-        if (fn == NULL){
-            continue;
-        }
 
         fn(UI_FRAME_EVENT_DATA_UPDATE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
 //		printf("g_uiScreen.cur_page_id=%d @ %s, %s, L%d \r\n",g_uiScreen.cur_page_id, __FILE__, __func__, __LINE__);

@@ -4,6 +4,10 @@
 #include "ui_frame.h"
 #include "menu_logic.h"
 
+extern UI_FRAME_PANEL_STRU g_page_splash_tbl[];
+extern uint16_t menu_page_splash_tbl_size_get(void);
+extern void menu_page_splash_event_process(uint32_t, uint16_t);
+
 extern UI_FRAME_PANEL_STRU g_page_index_tbl[];
 extern uint16_t menu_page_index_tbl_size_get(void);
 extern void menu_page_index_event_process(uint32_t, uint16_t);
@@ -34,6 +38,8 @@ typedef struct menu_logic_t{
 }MENU_LOGIC_STRU;
 
 MENU_LOGIC_STRU g_menu_logic_tbl[] = { // correspond to page id
+    {MENU_PAGE_INDEX_ID, g_page_splash_tbl,
+        menu_page_splash_event_process, menu_page_index_tbl_size_get},
     {MENU_PAGE_CHANNEL_ID, g_page_index_tbl, 
         menu_page_index_event_process, menu_page_index_tbl_size_get},
     {MENU_PAGE_CHANNEL_SW_ID, g_page_channel_tbl, 
