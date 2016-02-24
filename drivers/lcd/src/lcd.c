@@ -15,6 +15,7 @@ uint8_t				g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCD写缓存
 int lcd_cursor_addr_set(uint8_t x, uint8_t y);
 int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h, uint8_t inv);
 int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv);
+int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, uint8_t inv);
 
 /***************************************************************************************************
  * @fn      lcd_regist
@@ -426,21 +427,7 @@ int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
  ***************************************************************************************************/ 
 int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
 {
-	do
-	{
-		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
-		
-		lcd_char_disp_5x7(x, y, *pCharStr, 0);
-		x+=8;
-		if(x>=(LCD_W-1))													// 写满自动跳转下一行
-		{
-			x = 0;
-			y += 16;
-		}
-		pCharStr++;
-	}while(*pCharStr);
-
-	return 0;
+	return _lcd_str_disp_5x7(x, y, pCharStr, 0);
 }
 
 
@@ -505,23 +492,26 @@ int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t h
  ***************************************************************************************************/
 int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
 {
-	do
+	return _lcd_str_disp_5x7(x, y, pCharStr, 1);
+}
+
+int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, uint8_t inv){
+    do
 	{
 		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
 		
-		lcd_char_disp_5x7(x, y, *pCharStr, 1);
-		x+=8;
+		lcd_char_disp_5x7(x, y, *pCharStr, inv);
+		x+=5;
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{
 			x = 0;
-			y += 16;
+			y += 8;
 		}
 		pCharStr++;
 	}while(*pCharStr);
 
 	return 0;
 }
-
 
 /***************************************************************************************************
  * @fn      lcd_bmp_inv_disp
