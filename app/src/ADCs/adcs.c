@@ -39,7 +39,7 @@ uint16_t					g_gets_adcs_val[ADC_MODULE_NUMBER];					//其它任务获取各通道值缓存
 
 ///////////////////函数声明/////////////////////////////////
 Param_To_Store_t ReadFlash(uint32_t addr);
-void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len);
+int WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len);
 int adc_calib_calc(uint16_t curADC, uint16_t *pGet, uint16_t calibHighValue, uint16_t calibMidValue, uint16_t calibLowValue, uint16_t enable);
 float adc_voltage_calc(uint16_t adc_val);
 void adc_calib_ram_reset(ADC_Value_Calibration_t *calib_data, uint8_t len);
@@ -151,11 +151,11 @@ void Task_ADCs(void const * argument)
                 g_Param_To_Store.ADCs_Calibrate_value[i].LowValue = calib_para[i].LowValue;
             }
             
-            //init caibrat data
+            //init caibrate data
             adc_calib_ram_reset(calib_para, ADC_MODULE_NUMBER-1);
             LastSetStickMaxMinFlag = 0;
             g_Param_To_Store.calib_valid = 1;
-			
+
             //参数保存flash
             g_saveParaFlag = 1;
         }
@@ -188,7 +188,7 @@ void Task_ADCs(void const * argument)
         fVoltage = adc_voltage_calc(g_adc_msg.msg[ADC_MODULE_NUMBER-1]);    
 
         //保存新值由ui获取
-        memcpy(g_gets_adcs_val, g_adc_calibr_val, ADC_MODULE_NUMBER-1);
+        memcpy(g_gets_adcs_val, g_adc_calibr_val, sizeof(g_adc_calibr_val));
         g_gets_adcs_val[ADC_MODULE_NUMBER-1] = (uint16_t)(fVoltage*100);
         
 		//--------------拨档开关采集---------------------
@@ -228,7 +228,7 @@ void Task_ADCs(void const * argument)
         //配对
         if(g_radioPairingReqFlag)
         {
-            buf[0] = 0;
+            buf[0] = g_Param_To_Store.rx_num;
             buf[1] = 1;
             comm_data_send(1, buf, 2);
             LastPairingStatusFlag = 1;
@@ -237,7 +237,7 @@ void Task_ADCs(void const * argument)
         {
             if(LastPairingStatusFlag)
             {
-                buf[0] = 0;
+                buf[0] = g_Param_To_Store.rx_num;
                 buf[1] = 0;
                 comm_data_send(1, buf, 2);
                 LastPairingStatusFlag = 0;
@@ -245,7 +245,7 @@ void Task_ADCs(void const * argument)
         }
 
         //通道报文
-        //comm_data_send(3, g_ppm_channels, sizeof(g_ppm_channels));
+        comm_data_send(3, g_ppm_channels, sizeof(g_ppm_channels));
 #if 0
         printf("send package at %d:\r\n",  __LINE__);
         for(i=0; i<PPM_CH_NUM; i++)
@@ -258,8 +258,9 @@ void Task_ADCs(void const * argument)
         if(g_saveParaFlag)
         {
             g_saveParaFlag = 0;
-
-            //WriteFlash(ParaFlashAddr, &g_Param_To_Store, sizeof(g_Param_To_Store)/4);
+			g_Param_To_Store.valid = 0x55;
+			printf("g_Param_To_Store addr:%#x,g_Param_To_Store.filesafeMode:%#x, g_Param_To_Store.valid:%#x @ %s, %s, %d\r\n", &g_Param_To_Store, &g_Param_To_Store.failsafeMode, &g_Param_To_Store.valid, __FILE__, __func__, __LINE__);
+            WriteFlash(ParaFlashAddr, &g_Param_To_Store, sizeof(g_Param_To_Store)/4);
         }
 
         
@@ -313,25 +314,45 @@ Param_To_Store_t ReadFlash(uint32_t addr)
  *          @arg len  -- 要写入的字数据长度
  * @return  NULL
  ***************************************************************************************************/
-void WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len)
+int WriteFlash(uint32_t addr, uint32_t *pdata, uint32_t len)
 {
 	FLASH_Status FLASHStatus;
-	
+
+	printf("begin to unlock flash @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 	FLASH_Unlock();
+	printf("begin to clear flash @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 	FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | 
 	              FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR|FLASH_FLAG_PGSERR);
 
-	FLASHStatus = FLASH_EraseSector(ADDR_FLASH_SECTOR_3, VoltageRange_3);  
+	printf("begin to erase flash @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+	portENTER_CRITICAL();
+	FLASHStatus = FLASH_EraseSector(FLASH_Sector_7, VoltageRange_3);  
+	if(FLASHStatus != FLASH_COMPLETE)
+	{
+		portEXIT_CRITICAL();
+		printf("flash erase fail @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+		return -1;
+	}
 
+	printf("begin to write flash @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
 	while(len--)
 	{
-		if(FLASHStatus == FLASH_COMPLETE)
+		if(FLASH_ProgramWord(addr, *pdata) == FLASH_COMPLETE)
 		{
-	  		FLASHStatus = FLASH_ProgramWord(addr, *pdata);
+			addr += 4;
+			pdata++;
 		}
-		addr += 4;
-		pdata++;
+		else
+		{
+			portEXIT_CRITICAL();
+			printf("flash write fail @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+	  		return -1;
+		}
+		
 	}
+	portEXIT_CRITICAL();
+	printf("flash write successful @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
+	return 0;
 }
 
 /***************************************************************************************************
