@@ -411,9 +411,9 @@ int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
         c = ' ';
     }
     
-    pattern = &ascii_5x7[(c - ' ') * 5];
+    pattern = &ascii_5x7[(c - ' ') * FONT_5x7_WIDTH];
 
-    return _lcd_char_disp(x, y, pattern, 5, 7, inv);
+    return _lcd_char_disp(x, y, pattern, FONT_5x7_WIDTH, FONT_5x7_HEIGHT, inv);
 }
 
 /***************************************************************************************************
@@ -501,11 +501,11 @@ int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, u
 		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
 		
 		lcd_char_disp_5x7(x, y, *pCharStr, inv);
-		x+=5;
+		x += FONT_5x7_WIDTH;
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{
 			x = 0;
-			y += 8;
+			y += FONT_5x7_HEIGHT;
 		}
 		pCharStr++;
 	}while(*pCharStr);
