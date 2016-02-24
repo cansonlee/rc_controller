@@ -92,7 +92,7 @@ void menu_event_process
     uint16_t panel_id
 )
 {    
-    printf("panel event page %d panel %d event 0x%x\n", page_id, panel_id, (unsigned int)event);
+    //printf("panel event page %d panel %d event 0x%x\n", page_id, panel_id, (unsigned int)event);
 
     switch (event)
     {

@@ -134,7 +134,7 @@ static void ui_frame_panel_disp_state_set
     uint8_t state
 )
 {
-    printf("panel %p state %d content %s\r\n", panel, state, panel->content);
+    //printf("panel %p state %d content %s\r\n", panel, state, panel->content);
     if (UI_FRAME_PANEL_DISPLAY_STATE_NORMAL == state)
     {
         lcd_str_disp(panel->x, panel->y, panel->content);         
@@ -298,7 +298,7 @@ void ui_task
         }
 
         fn(UI_FRAME_EVENT_DATA_UPDATE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
-		printf("g_uiScreen.cur_page_id=%d @ %s, %s, L%d \r\n",g_uiScreen.cur_page_id, __FILE__, __func__, __LINE__);
+//		printf("g_uiScreen.cur_page_id=%d @ %s, %s, L%d \r\n",g_uiScreen.cur_page_id, __FILE__, __func__, __LINE__);
         
         if (0 != event)
         {

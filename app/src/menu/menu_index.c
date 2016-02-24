@@ -45,8 +45,8 @@ void menu_page_index_event_process
     switch(event){
         case UI_FRAME_EVENT_DATA_UPDATE:
             _menu_page_index_value_update(2, comm_mav_data_roll_get());
-            _menu_page_index_value_update(2, comm_mav_data_pitch_get());
-            _menu_page_index_value_update(2, comm_mav_data_alt_get());
+            _menu_page_index_value_update(4, comm_mav_data_pitch_get());
+            _menu_page_index_value_update(6, comm_mav_data_alt_get());
             break;
     }
 
@@ -54,10 +54,10 @@ void menu_page_index_event_process
 }
 
 void _menu_page_index_value_update(uint16_t panel_id, uint16_t val){
-    if (val > 0){
-        menu_logic_sprintf_float(" 3.1f", val, g_page_index_tbl[panel_id].content);
+    if (val >= 0){
+        menu_logic_sprintf_float(" %3.1f", val, g_page_index_tbl[panel_id].content);
     }else{
-        menu_logic_sprintf_float("-3.1f", val, g_page_index_tbl[panel_id].content);
+        menu_logic_sprintf_float("-%3.1f", val, g_page_index_tbl[panel_id].content);
     }
 
     ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
