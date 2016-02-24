@@ -301,9 +301,6 @@ void ui_task
 
     for (;;)
     {
-        osDelay(50);
-        ui_frame_display_update();
-
         key = keys_read(&key_status);
 
         event = key_to_event_map(key_status, key);
@@ -315,6 +312,9 @@ void ui_task
         {
             fn(event, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
         }
+
+        ui_frame_display_update();
+        osDelay(50);
     }
 }
 
