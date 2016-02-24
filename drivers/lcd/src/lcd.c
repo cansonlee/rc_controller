@@ -13,6 +13,8 @@ uint8_t				g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCD写缓存
 
 
 int lcd_cursor_addr_set(uint8_t x, uint8_t y);
+int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h, uint8_t inv);
+int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv);
 
 /***************************************************************************************************
  * @fn      lcd_regist
@@ -348,42 +350,69 @@ void lcd_init(void)
  *			dispByte -- 要显示的数据
  * @return  null
  ***************************************************************************************************/ 
-int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte)
-{
-	uint8_t char_index;
-	uint8_t sec,col,page,trans_x,origin_y,dat_H4,dat_L4,Shift;
-	uint8_t *pChar;
-	
-	char_index = dispByte - ' ';
-	pChar = &ascii_0816[char_index*16];
+int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h, uint8_t inv){
+    uint8_t lines = (h + 7) / 8;
+    uint8_t line, col, page, trans_x, origin_y, dat_H4, dat_L4, mask, pat;
 
-	origin_y = (y%2) ? (y/2 + 1) : (y/2);
-	trans_x = 211 - x;						//该款液晶原点在右上角
+    origin_y = (y % 2) ? (y / 2 + 1) : (y / 2);
+	trans_x = 211 - x;
+    
+    for(line = 0; line < lines; line++)
+    {
+        for(col = 0; col < w; col++)
+        {
+            lcd_cursor_addr_set(trans_x - col, origin_y + (line * 4));
 
-	for(sec=0; sec<2; sec++)
-	{
-		for(col=0; col<8; col++)
-		{
-			//lcd_cursor_addr_set(x+col,origin_y+(sec*4));
-			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
-			Shift=0x80;
-			for(page=0; page<4; page++)
-			{
-				if((*pChar&Shift)==0)
-					dat_H4=0x00;
-				else 
-					dat_H4=0xf0;			
-				Shift>>=1;
-				if((*pChar&Shift)==0)
-					dat_L4=0x00;
-				else 
-					dat_L4=0x0f;
-				Shift>>=1;
-				lcd_data_write(dat_H4|dat_L4);			
-			}
-			pChar++;
-		}
-	}
+            mask = 0x80;
+            pat = *pattern;
+
+            if (inv){pat = ~pat;}
+
+            // pattern 1bit <-> lcd 1pixel
+            // lcd 1pixel -> lcd disp buf 4bits
+            // lcd 2pixel as a unit
+            // so 1Byte -> 8pixel need draw 4 times
+            for(page = 0; page < 4; page++)
+            {
+                dat_H4 = ((pat & mask) == 0) ? 0x00 : 0xF0; 
+                            
+                mask >>=1;
+                dat_L4 = ((pat & mask) == 0) ? 0x00 : 0x0F;
+                
+                mask >>=1;
+                
+                lcd_data_write(dat_H4 | dat_L4);          
+            }
+            
+            pattern++;
+        }
+    }
+
+    return 0;
+}
+
+int lcd_char_disp_8x16(uint8_t x, uint8_t y, uint8_t c){
+    uint8_t* pattern;
+    
+    if ( c > '~'){
+        c = ' ';
+    }
+
+    pattern = &ascii_0816[(c - ' ') * 16];
+
+    return _lcd_char_disp(x, y, pattern, 8, 16, 0);
+}
+
+int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
+    uint8_t* pattern;
+    
+    if ( c > '~'){
+        c = ' ';
+    }
+    
+    pattern = &ascii_5x7[(c - ' ') * 5];
+
+    return _lcd_char_disp(x, y, pattern, 5, 7, inv);
 }
 
 /***************************************************************************************************
@@ -401,7 +430,7 @@ int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
 	{
 		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
 		
-		lcd_char_disp(x,y,*pCharStr);
+		lcd_char_disp_5x7(x, y, *pCharStr, 0);
 		x+=8;
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{
@@ -466,54 +495,6 @@ int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t h
 
 
 /***************************************************************************************************
- * @fn      lcd_char_inv_disp
- *
- * @brief   反白显示一个字符
- * @param   x,y -- 液晶坐标
- *			dispByte -- 要显示的数据
- * @return  0 -- success
- ***************************************************************************************************/ 
-int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte)
-{
-	uint8_t char_index;
-	uint8_t sec,col,page,trans_x,origin_y,dat_H4,dat_L4,Shift;
-	uint8_t *pChar;
-	
-	char_index = dispByte - ' ';
-	pChar = &ascii_0816[char_index*16];
-
-	origin_y = (y%2) ? (y/2 + 1) : (y/2);
-	trans_x = 211 - x;						//该款液晶原点在右上角
-
-	for(sec=0; sec<2; sec++)
-	{
-		for(col=0; col<8; col++)
-		{
-			//lcd_cursor_addr_set(x+col,origin_y+(sec*4));
-			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
-			Shift=0x80;
-			for(page=0; page<4; page++)
-			{
-				if(((~(*pChar))&Shift)==0)
-					dat_H4=0x00;
-				else 
-					dat_H4=0xf0;			
-				Shift>>=1;
-				if(((~(*pChar))&Shift)==0)
-					dat_L4=0x00;
-				else 
-					dat_L4=0x0f;
-				Shift>>=1;
-				lcd_data_write(dat_H4|dat_L4);			
-			}
-			pChar++;
-		}
-	}
-
-	return 0;
-}
-
-/***************************************************************************************************
  * @fn      lcd_str_inv_disp
  *
  * @brief   反白显示段连续字符
@@ -528,7 +509,7 @@ int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
 	{
 		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
 		
-		lcd_char_inv_disp(x,y,*pCharStr);
+		lcd_char_disp_5x7(x, y, *pCharStr, 1);
 		x+=8;
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{

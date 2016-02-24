@@ -93,7 +93,6 @@ extern uint8_t				lcdTxBuff[LCD_H/8][LCD_W];
 //---------------º¯ÊıÊä³ö--------------------------------------
 void lcd_init(void);
 int lcd_data_burst_write(uint8_t *buf, uint16_t len);
-int lcd_char_disp(uint8_t x,uint8_t y,uint8_t dispByte);
 int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
 int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
 int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte);
