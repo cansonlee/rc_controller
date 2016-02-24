@@ -406,7 +406,7 @@ int lcd_char_disp_8x16(uint8_t x, uint8_t y, uint8_t c){
 int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
     uint8_t* pattern;
     
-    if ( c > '~'){
+    if ( c > 'z'){
         c = ' ';
     }
     
