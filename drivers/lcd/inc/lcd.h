@@ -88,18 +88,18 @@
 #define		LCD_TX_BUFF_SIZE		(LCD_W*LCD_H/8*4)				//(LCD_W*LCD_H*4/8)
 
 //---------------外部变量--------------------------------------
-extern uint8_t				lcdTxBuff[LCD_H/8][LCD_W];
+
 
 //---------------函数输出--------------------------------------
 void lcd_init(void);
-int lcd_data_burst_write(uint8_t *buf, uint16_t len);
+int lcd_data_burst_write(void);
 int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
 int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
 int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte);
 int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
 int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
-int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t height);
-int lcd_clean(void);
+void lcd_clean(void);
 
+void lcd_dma_irq_handler_callback(void);
 
 #endif

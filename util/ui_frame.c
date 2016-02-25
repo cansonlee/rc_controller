@@ -231,8 +231,9 @@ static void ui_frame_display_update
             printf("[%s, L%d] call ui_frame_page_fresh ret %d\n", __func__, (int)__LINE__, (int)ret);
             return;
         }
+        
         lcd_clean();
-		osDelay(50);
+
         for (panel_id = 0; panel_id < g_uiScreen.num_of_panels; panel_id++)
         {
             panel = &g_uiScreen.panels[panel_id];
@@ -254,6 +255,8 @@ static void ui_frame_display_update
             }
         }
     }
+
+    lcd_data_burst_write();
 }
 
 int32_t ui_frame_task_start

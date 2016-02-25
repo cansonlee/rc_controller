@@ -3,19 +3,27 @@
 
 #include "font.h" 
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
 /////////////////////全局变量定义///////////////////////////////////////
-uint8_t				g_LcdWriteBusyFlag;					//LCD写繁忙标志
-//uint8_t				g_lcdTxBuff[LCD_H/8][LCD_W];			//LCD写缓存	
-uint8_t				g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCD写缓存	
+
+static uint8_t g_LcdWriteBusyFlag;					//LCD写繁忙标志
+static uint8_t g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCD写缓存	
 
 
+void lcd_regist(void);
+int lcd_cmd_write(uint8_t cmd);
 int lcd_cursor_addr_set(uint8_t x, uint8_t y);
 int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h, uint8_t inv);
 int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv);
 int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, uint8_t inv);
+inline uint8_t lcd_is_point_outside(uint8_t x, uint8_t y);
+int lcd_plot(uint8_t x, uint8_t y);
+int lcd_erase(uint8_t x, uint8_t y);
+
+#define LCD_MIRROR_X(x) 211 - (x)
 
 /***************************************************************************************************
  * @fn      lcd_regist
@@ -158,49 +166,17 @@ int lcd_cmd_write(uint8_t cmd)
 	return 0;
 }
 
-/***************************************************************************************************
- * @fn      lcd_data_write
- *
- * @brief   LCD字节写入
- * @param   NULL
- * @return  0 -- success
- ***************************************************************************************************/  
-void lcd_data_write(uint8_t data)
-{
-	LCD_A0_HIGH();
-	LCD_NCS_LOW()
-	while ( ( LCD_SPI_MASTER->SR & SPI_SR_TXE ) == 0 ) 
-	{};
-  	(void)LCD_SPI_MASTER->DR ;		// Clear receive
-  	LCD_SPI_MASTER->DR = data ;
-  	while ( ( LCD_SPI_MASTER->SR & SPI_SR_RXNE ) == 0 ) 
-	{};
-	LCD_NCS_HIGH();
-	
-	return 0;
-}
-
 
 /***************************************************************************************************
  * @fn      lcd_data_burst_write
  *
  * @brief   LCD数据批量写入
- * @param   buf -- 要写入的数据的缓存
- *			len -- 写入数据的长度
  * @return  1 --  busy
  *			-1 - failure
  *			0 --  success 
  ***************************************************************************************************/  
-int lcd_data_burst_write(uint8_t *buf, uint16_t len)
+int lcd_data_burst_write(void)
 {
-	IF_PTR_IS_NULL_RET_NULLPTR_ERR(buf);
-
-	if(len > LCD_TX_BUFF_SIZE)
-	{
-		printf("lcd write lenth is too large,return @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
-		return -1;
-	}	
-	
 	if(g_LcdWriteBusyFlag)
 	{
 		printf("lcd is busy, return @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
@@ -218,8 +194,7 @@ int lcd_data_burst_write(uint8_t *buf, uint16_t len)
 	DMA_Cmd(LCD_DMA_STREAM, DISABLE);
 	DMA_ClearITPendingBit(LCD_DMA_STREAM, LCD_DMA_TC_FLAG);
 
-	memcpy(g_lcdTxBuff, buf, len);
-	DMA_SetCurrDataCounter(LCD_DMA_STREAM, len);
+	DMA_SetCurrDataCounter(LCD_DMA_STREAM, LCD_TX_BUFF_SIZE);
 	
 	SPI_I2S_DMACmd(LCD_SPI_MASTER,SPI_I2S_DMAReq_Tx,ENABLE);
 	DMA_ITConfig(LCD_DMA_STREAM, DMA_IT_TC, ENABLE);		
@@ -353,55 +328,33 @@ void lcd_init(void)
  ***************************************************************************************************/ 
 int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h, uint8_t inv){
     uint8_t lines = (h + 7) / 8;
-    uint8_t line, col, page, trans_x, origin_y, dat_H4, dat_L4, mask, pat;
+    uint8_t line, row, col, mask, pat;
 
-    origin_y = (y % 2) ? (y / 2 + 1) : (y / 2);
-	trans_x = 211 - x;
-    
-    for(line = 0; line < lines; line++)
-    {
-        for(col = 0; col < w; col++)
-        {
-            lcd_cursor_addr_set(trans_x - col, origin_y + (line * 4));
+    x = LCD_MIRROR_X(x); // 屏幕左右调换
 
+    // 列扫描模式字体
+    for(line = 0; line < lines; line++){
+        
+        for (col = 0; col < w; col++){
             mask = 0x80;
             pat = *pattern;
 
             if (inv){pat = ~pat;}
 
-            // pattern 1bit <-> lcd 1pixel
-            // lcd 1pixel -> lcd disp buf 4bits
-            // lcd 2pixel as a unit
-            // so 1Byte -> 8pixel need draw 4 times
-            for(page = 0; page < 4; page++)
-            {
-                dat_H4 = ((pat & mask) == 0) ? 0x00 : 0xF0; 
-                            
-                mask >>=1;
-                dat_L4 = ((pat & mask) == 0) ? 0x00 : 0x0F;
-                
-                mask >>=1;
-                
-                lcd_data_write(dat_H4 | dat_L4);          
+            for (row = 0; row < 8; row++){ // 8 rows = 1 line
+                mask >>= row;  
+                if ((pat & mask) == 0){
+                    lcd_erase(x, y + row);
+                }else{
+                    lcd_plot(x, y + row);
+                }
             }
-            
+
             pattern++;
-        }
+        }    
     }
 
     return 0;
-}
-
-int lcd_char_disp_8x16(uint8_t x, uint8_t y, uint8_t c){
-    uint8_t* pattern;
-    
-    if ( c > '~'){
-        c = ' ';
-    }
-
-    pattern = &ascii_0816[(c - ' ') * 16];
-
-    return _lcd_char_disp(x, y, pattern, 8, 16, 0);
 }
 
 int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
@@ -441,43 +394,7 @@ int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr)
  ***************************************************************************************************/ 
 int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height)
 {
-	uint8_t t, col, sec, page, trans_x, origin_y;
-	uint8_t dat_H4, dat_L4, Shift;
-	
-	IF_CONDITION_TURE_RET_PARAM_ERR(width > LCD_W);
-	IF_CONDITION_TURE_RET_PARAM_ERR(height > LCD_H);
-	IF_CONDITION_TURE_RET_PARAM_ERR(((height%8) != 0) && (((height/8 + 1)*8)> LCD_H));
-
-	origin_y = (y%2) ? (y/2 + 1) : (y/2);
-	trans_x = 211 - x;						//该款液晶原点在右上角
-	t = (height%8) ? (height/8 +1) : (height/8);
-
-	for(sec=0; sec<t; sec++)
-	{
-		for(col=0; col<width; col++)
-		{
-			//lcd_cursor_addr_set(x+col,origin_y+(sec*4));
-			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
-			Shift=0x80;
-			for(page=0; page<4; page++)
-			{
-				if((*p_bmp&Shift)==0)
-					dat_H4=0x00;
-				else 
-					dat_H4=0xf0;			
-				Shift>>=1;
-				if((*p_bmp&Shift)==0)
-					dat_L4=0x00;
-				else 
-					dat_L4=0x0f;
-				Shift>>=1;
-				lcd_data_write(dat_H4|dat_L4);			
-			}
-			p_bmp++;
-		}
-	}
-	
-	return 0;
+	return _lcd_char_disp(x, y, p_bmp, width, height, 0);
 }
 
 
@@ -523,82 +440,7 @@ int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, u
  ***************************************************************************************************/ 
 int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height)
 {
-	uint8_t t, col, sec, page, trans_x, origin_y;
-	uint8_t dat_H4, dat_L4, Shift;
-	
-	IF_CONDITION_TURE_RET_PARAM_ERR(width > LCD_W);
-	IF_CONDITION_TURE_RET_PARAM_ERR(height > LCD_H);
-	IF_CONDITION_TURE_RET_PARAM_ERR(((height%8) != 0) && (((height/8 + 1)*8)> LCD_H));
-
-	origin_y = (y%2) ? (y/2 + 1) : (y/2);
-	trans_x = 211 - x;						//该款液晶原点在右上角
-	t = (height%8) ? (height/8 +1) : (height/8);
-
-	for(sec=0; sec<t; sec++)
-	{
-		for(col=0; col<width; col++)
-		{
-			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
-			Shift=0x80;
-			for(page=0; page<4; page++)
-			{
-				if(((~(*p_bmp))&Shift)==0)
-					dat_H4=0x00;
-				else 
-					dat_H4=0xf0;			
-				Shift>>=1;
-				if(((~(*p_bmp))&Shift)==0)
-					dat_L4=0x00;
-				else 
-					dat_L4=0x0f;
-				Shift>>=1;
-				lcd_data_write(dat_H4|dat_L4);			
-			}
-			p_bmp++;
-		}
-	}
-	
-	return 0;
-}
-
-
-/***************************************************************************************************
- * @fn      lcd_area_clear
- *
- * @brief   清空指定区域
- * @param   x,y -- 液晶坐标
- *			width -- 区域宽度
- *			hight -- 区域高度
- * @return  0 -- success
- *			-1 - failure
- ***************************************************************************************************/ 
-
-int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t height)
-{
-	uint8_t t, col, sec, page, trans_x, origin_y;
-	
-	IF_CONDITION_TURE_RET_PARAM_ERR(width > LCD_W);
-	IF_CONDITION_TURE_RET_PARAM_ERR(height > LCD_H);
-	IF_CONDITION_TURE_RET_PARAM_ERR(((height%8) != 0) && (((height/8 + 1)*8)> LCD_H));
-
-	
-	origin_y = (y%2) ? (y/2 + 1) : (y/2);
-	trans_x = 211 - x;						//该款液晶原点在右上角
-	t = (height%8) ? (height/8 +1) : (height/8);
-
-	for(sec=0; sec<t; sec++)
-	{
-		for(col=0; col<width; col++)
-		{
-			lcd_cursor_addr_set(trans_x - col,origin_y+(sec*4));
-			for(page=0; page<4; page++)
-			{
-				lcd_data_write(0x00);			
-			}
-		}
-	}
-
-	return 0;
+	return _lcd_char_disp(x, y, p_bmp, width, height, 1);
 }
 
 
@@ -609,15 +451,35 @@ int lcd_area_clear(uint8_t x, uint8_t y,  uint8_t width, uint8_t height)
  * @param   null
  * @return  0 -- success
  ***************************************************************************************************/ 
-int lcd_clean(void)
+void lcd_clean(void)
 {
-	uint8_t	 lcdSendBuff[LCD_TX_BUFF_SIZE];
-	printf("before burst write@ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
-	memset(lcdSendBuff, 0, sizeof(lcdSendBuff));
-	
-	lcd_data_burst_write(lcdSendBuff, LCD_TX_BUFF_SIZE);
-	
-	return 0;
+	memset(g_lcdTxBuff, 0, sizeof(g_lcdTxBuff));
+}
+
+inline uint8_t lcd_is_point_outside(uint8_t x, uint8_t y){
+    return (x>=LCD_W || y>=LCD_H);
+}
+
+int lcd_plot(uint8_t x, uint8_t y){
+
+    IF_CONDITION_TURE_RET_PARAM_ERR(lcd_is_point_outside(x, y));
+
+    uint8_t *p = &g_lcdTxBuff[ y / 2 * LCD_W + x ];
+
+    *p = (y & 1) ? (*p | 0x0F) : (*p | 0xF0);
+
+    return 0;
+}
+
+int lcd_erase(uint8_t x, uint8_t y){
+    
+    IF_CONDITION_TURE_RET_PARAM_ERR(lcd_is_point_outside(x, y));
+    
+    uint8_t *p = &g_lcdTxBuff[ y / 2 * LCD_W + x ];
+
+    *p = (y & 1) ? (*p & 0xF0) : (*p & 0x0F);
+
+    return 0;
 }
 
 
