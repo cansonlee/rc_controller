@@ -290,8 +290,8 @@ void lcd_init(void)
 	lcd_cmd_write(0x28);   //set pannel loading
 	lcd_cmd_write(0x40);   //scroll line LSB
 	lcd_cmd_write(0x50);   //SCROLL LINE MSB
-//	lcd_cmd_write(0x89);   //ram address control
-	lcd_cmd_write(0x8B);   //ram address control, PAGE increment first
+	lcd_cmd_write(0x89);   //ram address control, CA increment first
+//	lcd_cmd_write(0x8B);   //ram address control, PAGE increment first
 	lcd_cmd_write(0xC0);   //LCD mapping control
 //	lcd_cmd_write(0x04);   //MX=0,MY=1
 	lcd_cmd_write(0x01);   //MX=0,MY=0,MSF=1
