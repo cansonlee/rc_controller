@@ -294,7 +294,7 @@ void lcd_init(void)
 //	lcd_cmd_write(0x8B);   //ram address control, PAGE increment first
 	lcd_cmd_write(0xC0);   //LCD mapping control
 //	lcd_cmd_write(0x04);   //MX=0,MY=1
-	lcd_cmd_write(0x01);   //MX=0,MY=0,MSF=1
+	lcd_cmd_write(0x01);   //MY=0,MX=0,MSF=1
 	lcd_cmd_write(0xD0);   //DISPLAY PATTERN = 16-SCALE GRAY
 	lcd_cmd_write(0xF1);   //SET COM end
 	lcd_cmd_write(0x3F);   //64
@@ -330,36 +330,27 @@ int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h,
     uint8_t lines = (h + 7) / 8;
     uint8_t line, row, col, mask, pat;
 
-    for (col = 0; col < 5; col++){
-        for (row = 0; row < 30; row++){
-            lcd_plot(x + col, y + row);
-        }
-    }
-
-    return 0;
-
     x = LCD_MIRROR_X(x); // ÆÁÄ»×óÓÒµ÷»»
 
     // ÁÐÉ¨ÃèÄ£Ê½×ÖÌå
     for(line = 0; line < lines; line++){
         
         for (col = 0; col < w; col++){
-            mask = 0x80;
             pat = *pattern;
 
             if (inv){pat = ~pat;}
 
             for (row = 0; row < 8; row++){ // 8 rows = 1 line
-                mask >>= row;  
+                mask = 0x80 >> row;  
                 if ((pat & mask) == 0){
-                    lcd_erase(x, y + row);
+                    lcd_erase(x-col, y + row);
                 }else{
-                    lcd_plot(x, y + row);
+                    lcd_plot(x-col, y + row);
                 }
             }
-
             pattern++;
-        }    
+        }   
+		y += line*8;
     }
 
     return 0;
