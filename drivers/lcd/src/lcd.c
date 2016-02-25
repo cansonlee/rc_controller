@@ -330,6 +330,14 @@ int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h,
     uint8_t lines = (h + 7) / 8;
     uint8_t line, row, col, mask, pat;
 
+    for (col = 0; col < 5; col++){
+        for (row = 0; row < 30; row++){
+            lcd_plot(x + col, y + row);
+        }
+    }
+
+    return 0;
+
     x = LCD_MIRROR_X(x); // ÆÁÄ»×óÓÒµ÷»»
 
     // ÁĞÉ¨ÃèÄ£Ê½×ÖÌå
