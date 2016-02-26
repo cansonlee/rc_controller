@@ -24,6 +24,7 @@ int lcd_plot(uint8_t x, uint8_t y);
 int lcd_erase(uint8_t x, uint8_t y);
 
 #define LCD_MIRROR_X(x) 211 - (x)
+#define GET_BUF_POINT_ADDR(x, y) &g_lcdTxBuff[ (y) / 2 * LCD_W + (x) ]
 
 /***************************************************************************************************
  * @fn      lcd_regist
@@ -463,7 +464,7 @@ int lcd_plot(uint8_t x, uint8_t y){
 
     IF_CONDITION_TURE_RET_PARAM_ERR(lcd_is_point_outside(x, y));
 
-    uint8_t *p = &g_lcdTxBuff[ y / 2 * LCD_W + x ];
+    uint8_t *p = GET_BUF_POINT_ADDR(x, y);
 
     *p = (y & 1) ? (*p | 0x0F) : (*p | 0xF0);
 
@@ -474,7 +475,7 @@ int lcd_erase(uint8_t x, uint8_t y){
     
     IF_CONDITION_TURE_RET_PARAM_ERR(lcd_is_point_outside(x, y));
     
-    uint8_t *p = &g_lcdTxBuff[ y / 2 * LCD_W + x ];
+    uint8_t *p = GET_BUF_POINT_ADDR(x, y);
 
     *p = (y & 1) ? (*p & 0xF0) : (*p & 0x0F);
 
