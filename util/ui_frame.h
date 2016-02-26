@@ -23,6 +23,7 @@ typedef enum
 {
     UI_FRAME_PANEL_TYPE_STRING = 0,
     UI_FRAME_PANEL_TYPE_GRAPH,
+    UI_FRAME_PANEL_TYPE_PRIVATE,
     UI_FRAME_PANEL_TYPE_INVALID
 } UI_FRAME_PANEL_TYPE_ENUM;
 
@@ -88,6 +89,8 @@ typedef struct ui_frame_screen_s
     ui_frame_info_cb  info_cb;
     UI_FRAME_PANEL_INNEL_STRU *panels;
 } UI_FRAME_SCREEN_STRU;
+
+typedef void (*PANEL_DRAW_FN)(UI_FRAME_PANEL_STRU *panel);
 
 int32_t ui_frame_screen_init
 (

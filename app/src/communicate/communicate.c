@@ -126,6 +126,11 @@ float comm_mav_data_alt_get(void){
     return ToDeg(m_mav_data.alt);
 }
 
+int16_t comm_mav_data_heading_get(void){
+    return m_mav_data.heading;
+}
+
+
 // return global string address or NULL
 char* comm_mav_data_flightmode_get(void){
     return m_mav_data.flight_mode;

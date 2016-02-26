@@ -93,13 +93,22 @@
 //---------------º¯ÊıÊä³ö--------------------------------------
 void lcd_init(void);
 int lcd_data_burst_write(void);
-int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
-int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
-int lcd_char_inv_disp(uint8_t x,uint8_t y,uint8_t dispByte);
-int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
-int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
+void lcd_dma_irq_handler_callback(void);
+
 void lcd_clean(void);
 
-void lcd_dma_irq_handler_callback(void);
+int lcd_str_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
+int lcd_str_inv_disp(unsigned char x,unsigned char y,unsigned char *pCharStr);
+
+int lcd_disp_bmp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
+int lcd_bmp_inv_disp(uint8_t x, uint8_t y,  uint8_t *p_bmp, uint8_t width, uint8_t height);
+
+int lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen);
+int lcd_hline_erase(uint8_t x, uint8_t y, uint8_t len, uint8_t pen);
+int lcd_vline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen);
+int lcd_vline_erase(uint8_t x, uint8_t y, uint8_t len, uint8_t pen);
+int lcd_fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+int lcd_clear_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+
 
 #endif

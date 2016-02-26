@@ -70,6 +70,8 @@ int32_t ui_frame_panel_display
     UI_FRAME_PANEL_STRU *panel
 )
 {
+    PANEL_DRAW_FN fn;
+    
     switch (panel->data_type)
     {
         case UI_FRAME_PANEL_TYPE_STRING:
@@ -78,6 +80,11 @@ int32_t ui_frame_panel_display
         case UI_FRAME_PANEL_TYPE_GRAPH:
             lcd_disp_bmp(panel->x, panel->y, panel->content, panel->width, panel->height);
             break;
+        case UI_FRAME_PANEL_TYPE_PRIVATE:
+            if (panel->content != NULL){
+                fn = (PANEL_DRAW_FN)panel->content;
+                fn(panel);
+            }
         default:
             return -ENOSUPPORT;
     }

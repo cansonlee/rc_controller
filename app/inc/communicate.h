@@ -28,6 +28,8 @@ void comm_data_send(uint8_t id, void* buf, uint8_t len);
 float comm_mav_data_roll_get(void);
 float comm_mav_data_pitch_get(void);
 float comm_mav_data_alt_get(void);
+int16_t comm_mav_data_heading_get(void);
+
 // return global string address or NULL
 char* comm_mav_data_flightmode_get(void);
 
