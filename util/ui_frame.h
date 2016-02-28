@@ -90,7 +90,7 @@ typedef struct ui_frame_screen_s
     UI_FRAME_PANEL_INNEL_STRU *panels;
 } UI_FRAME_SCREEN_STRU;
 
-typedef void (*PANEL_DRAW_FN)(UI_FRAME_PANEL_STRU *panel);
+typedef void (*PANEL_DRAW_FN)(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
 
 int32_t ui_frame_screen_init
 (

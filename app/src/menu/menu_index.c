@@ -22,7 +22,7 @@ void _menu_page_index_value_update(uint16_t panel_id, float val);
 void _menu_page_index_sw_value_update(uint16_t panel_id, uint8_t* format, uint16_t val);
 void _menu_page_index_heading_update(uint16_t panel_id, uint16_t val);
 
-void _menu_page_index_rotate_switch_draw(UI_FRAME_PANEL_STRU *panel);
+void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
 
 static uint8_t m_radio_battery[] = "L -.-v --%";
 static uint8_t m_plane_battery[] = "R --.-v --%";
@@ -61,7 +61,10 @@ UI_FRAME_PANEL_STRU g_page_index_tbl[] =
     {129,  50, 6,   8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "H"},
     {138,  50, 30,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_attitude_head},
 
-    {3,    3,  4,   26, 1,   UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
+    {2,    3,  4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
+    {2,    35, 4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
+    {205,  3,  4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
+    {205,  35, 4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
 };
 
 uint16_t menu_page_index_tbl_size_get(void){
@@ -94,6 +97,8 @@ void menu_page_index_event_process
 
             ui_frame_panel_content_set(15, UI_FRAME_PANEL_TYPE_PRIVATE, 
                 g_page_index_tbl[15].content);
+            ui_frame_panel_content_set(16, UI_FRAME_PANEL_TYPE_PRIVATE, 
+                g_page_index_tbl[16].content);
             
             break;
     }
@@ -132,25 +137,44 @@ void _menu_page_index_sw_value_update(uint16_t panel_id, uint8_t* format, uint16
 }
 
 
-void _menu_page_index_rotate_switch_draw(UI_FRAME_PANEL_STRU *panel){
+void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel){
     if (panel == NULL) return;
 
     ALL_STICK_INPUT_t input;
     adc_all_in_val_get(&input);
 
-    uint16_t rlu = input.adcs[ROTATE_LU];
+    uint8_t type;
+
+    switch (panel_id){
+        case 15:
+            type = ROTATE_LU;
+            break;
+        case 16:
+            type = ROTATE_LD;
+            break;
+        case 17:
+            type = ROTATE_RU;
+            break;
+        case 18:
+            type = ROTATE_RD;
+            break;
+        default:
+            return;
+    }
+
+    uint16_t val = input.adcs[type];
     
     lcd_clear_rect(panel->x, panel->y, panel->width, panel->height);
     lcd_vline_disp(panel->x + 1, panel->y, panel->height, 2);
 
-    if (rlu > 2000){
-        rlu = 2000;
-    } else if (rlu < 1000){
-        rlu = 1000;
+    if (val > 2000){
+        val = 2000;
+    } else if (val < 1000){
+        val = 1000;
     }
 
-    rlu -= 1000;
-    rlu /= 40;
-    lcd_hline_disp(panel->x, panel->y + rlu, panel->width, 2);
+    val -= 1000;
+    val /= 40;
+    lcd_hline_disp(panel->x, panel->y + val, panel->width, 2);
 }
 

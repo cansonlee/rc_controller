@@ -19,6 +19,7 @@ void ui_task
 
 int32_t ui_frame_panel_display
 (
+    uint16_t panel_id,
     UI_FRAME_PANEL_STRU *panel
 );
 
@@ -67,6 +68,7 @@ int32_t ui_frame_screen_init
 
 int32_t ui_frame_panel_display
 (
+    uint16_t panel_id,
     UI_FRAME_PANEL_STRU *panel
 )
 {
@@ -83,7 +85,7 @@ int32_t ui_frame_panel_display
         case UI_FRAME_PANEL_TYPE_PRIVATE:
             if (panel->content != NULL){
                 fn = (PANEL_DRAW_FN)panel->content;
-                fn(panel);
+                fn(panel_id, panel);
             }
             break;
         default:
@@ -245,7 +247,7 @@ static void ui_frame_display_update
         for (panel_id = 0; panel_id < g_uiScreen.num_of_panels; panel_id++)
         {
             panel = &g_uiScreen.panels[panel_id];
-            ui_frame_panel_display(&panel->panel_info);
+            ui_frame_panel_display(panel_id, &panel->panel_info);
             panel->dirty = 0;
         }
 		printf("lcd display @ %s, %s, %d\r\n", __FILE__, __func__, __LINE__);
@@ -258,7 +260,7 @@ static void ui_frame_display_update
             panel = &g_uiScreen.panels[panel_id];
             if (panel->dirty)
             {
-                ui_frame_panel_display(&panel->panel_info);
+                ui_frame_panel_display(panel_id, &panel->panel_info);
                 panel->dirty = 0;
             }
         }
