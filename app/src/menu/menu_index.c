@@ -103,9 +103,9 @@ void menu_page_index_event_process
 
 void _menu_page_index_value_update(uint16_t panel_id, float val){
     if (val >= 0){
-        menu_logic_sprintf_float(" %3f ", val, g_page_index_tbl[panel_id].content);
+        menu_logic_sprintf_float(" %3.0f ", val, g_page_index_tbl[panel_id].content);
     }else{
-        menu_logic_sprintf_float("-%3f ", val, g_page_index_tbl[panel_id].content);
+        menu_logic_sprintf_float("-%3.0f ", val, g_page_index_tbl[panel_id].content);
     }
 
     ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
@@ -114,7 +114,7 @@ void _menu_page_index_value_update(uint16_t panel_id, float val){
 
 void _menu_page_index_heading_update(uint16_t panel_id, uint16_t val){
 
-    menu_logic_sprintf_float("%3f N", val, g_page_index_tbl[panel_id].content);
+    menu_logic_sprintf_float("%3.0f N", val, g_page_index_tbl[panel_id].content);
     
 
     ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
