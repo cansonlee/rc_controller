@@ -85,6 +85,7 @@ int32_t ui_frame_panel_display
                 fn = (PANEL_DRAW_FN)panel->content;
                 fn(panel);
             }
+            break;
         default:
             return -ENOSUPPORT;
     }
