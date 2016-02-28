@@ -2,6 +2,7 @@
 #include "cmsis_os.h"
 
 #include "ui_frame.h"
+#include "menu_logic.h"
 
 #include "ADCs.h"
 
@@ -15,11 +16,11 @@ void menu_page_cal_event_process
 
 UI_FRAME_PANEL_STRU g_page_cal_tbl[] = 
 {
-    /* x   y   w   h   pid  datype                      ditype                               content*/
-    {0,    0,  0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_INV,    "PAGE 5"},
-    {0,    16, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "STICK CENTER CAL"},
-    {0,    32, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "LIMIT CAL"},
-    {136,  32, 0,  16, 1,   UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "START"},
+    /* x   y   w   h   pid               datype                      ditype                               content*/
+    {0,    0,  0,  16, MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_INV,    "PAGE 5"},
+    {0,    16, 0,  16, MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "STICK CENTER CAL"},
+    {0,    32, 0,  16, MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "LIMIT CAL"},
+    {136,  32, 0,  16, MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "START"},
     
 };
 

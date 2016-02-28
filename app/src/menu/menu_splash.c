@@ -29,8 +29,8 @@ static uint8_t skyborne_bmp[]=
 
 UI_FRAME_PANEL_STRU g_page_splash_tbl[] = 
 {
-    /* x   y   w   h   pid  datype                      ditype                               content*/
-    {86,   16, 39, 32, 1,   UI_FRAME_PANEL_TYPE_GRAPH, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, skyborne_bmp},
+    /* x   y   w   h   pid                  datype                      ditype                               content*/
+    {86,   16, 39, 32, MENU_PAGE_SPLASH_ID, UI_FRAME_PANEL_TYPE_GRAPH, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, skyborne_bmp},
 };
 
 uint16_t menu_page_splash_tbl_size_get(void){
