@@ -366,7 +366,7 @@ int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h,
 int _lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
     uint8_t* pattern;
     
-    if ( c > 'z'){
+    if ( c > '~'){
         c = ' ';
     }
     

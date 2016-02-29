@@ -2,6 +2,7 @@
 #include "cmsis_os.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "ui_frame.h"
 #include "menu_logic.h"
@@ -11,55 +12,36 @@
 #include "lcd.h"
 
 
-
 uint16_t menu_page_index_tbl_size_get(void);
 void menu_page_index_event_process
 (
     uint32_t event,
     uint16_t panel_id
 );
-void _menu_page_index_value_update(uint16_t panel_id, float val);
-void _menu_page_index_sw_value_update(uint16_t panel_id, uint8_t* format, uint16_t val);
-void _menu_page_index_heading_update(uint16_t panel_id, uint16_t val);
 
+uint8_t _menu_page_index_sw_tag_get(uint8_t val);
+void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
+void _menu_page_index_plane_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
+void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
+void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
+void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
+void _menu_page_index_private_draw_update(uint16_t panel_id);
 
-static uint8_t m_radio_battery[] = "L -.-v --%";
-static uint8_t m_plane_battery[] = "R --.-v --%";
-static uint8_t m_rssi[] = "RSSI --%";
-static uint8_t m_switch_sa[] = "SA -";
-static uint8_t m_switch_sb[] = "SB -";
-static uint8_t m_switch_sc[] = "SC -";
-static uint8_t m_switch_sd[] = "SD -";
-static uint8_t m_switch_se[] = "SE -";
 static uint8_t m_flight_mode[] = "DISARMED";
-static uint8_t m_attitude_roll[] = "-----";
-static uint8_t m_attitude_pitch[] = "-----";
-static uint8_t m_attitude_head[] = "----N";
-
 
 UI_FRAME_PANEL_STRU g_page_index_tbl[] = 
 {
     /* x   y   w    h   pid                 datype                      ditype                               content*/
-    {11,   6,  60,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_radio_battery},
-    {79,   6,  66,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_plane_battery},
-    {153,  6,  48,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_rssi},
+    {16,   6,  56,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_local_baterry_draw},
+    {80,   6,  62,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_plane_baterry_draw},
+    {150,  6,  46,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rssi_draw},
 
-
-    {16,   19, 24,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_switch_sa},
-    {55,   19, 24,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_switch_sb},
-    {94,   19, 24,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_switch_sc},
-    {133,  19, 24,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_switch_sd},
-    {172,  19, 24,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_switch_se},
+    {35,   19, 142, 8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_sw_value_draw},
 
     {82,   37, 48,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_flight_mode},
 
-    {43,   50, 6,   8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "R"},
-    {52,   50, 30,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_attitude_roll},
-    {86,   50, 6,   8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "P"},
-    {95,   50, 30,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_attitude_pitch},
-    {129,  50, 6,   8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "H"},
-    {138,  50, 30,  8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, m_attitude_head},
+    {43,   50, 125, 8,  MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_attitude_draw},
 
     {2,    3,  4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
     {2,    35, 4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
@@ -77,28 +59,20 @@ void menu_page_index_event_process
     uint16_t panel_id
 )
 {
-    ALL_STICK_INPUT_t input;
-
     panel_id = panel_id;
     
     switch(event){
         case UI_FRAME_EVENT_DATA_UPDATE:
-            adc_all_in_val_get(&input);
-
-            _menu_page_index_sw_value_update(3, (uint8_t*)"SA %d", input.SW.SWS.SA);
-            _menu_page_index_sw_value_update(4, (uint8_t*)"SB %d", input.SW.SWS.SB);
-            _menu_page_index_sw_value_update(5, (uint8_t*)"SC %d", input.SW.SWS.SC);
-            _menu_page_index_sw_value_update(6, (uint8_t*)"SD %d", input.SW.SWS.SD);
-            _menu_page_index_sw_value_update(7, (uint8_t*)"SE %d", input.SW.SWS.SE);
             
-            _menu_page_index_value_update(10, comm_mav_data_roll_get());
-            _menu_page_index_value_update(12, comm_mav_data_pitch_get());
-            _menu_page_index_heading_update(14, comm_mav_data_heading_get());
-
-            ui_frame_panel_content_set(15, UI_FRAME_PANEL_TYPE_PRIVATE, 
-                g_page_index_tbl[15].content);
-            ui_frame_panel_content_set(16, UI_FRAME_PANEL_TYPE_PRIVATE, 
-                g_page_index_tbl[16].content);
+            _menu_page_index_private_draw_update(0);
+            _menu_page_index_private_draw_update(1);
+            _menu_page_index_private_draw_update(2);
+            _menu_page_index_private_draw_update(3);
+            _menu_page_index_private_draw_update(5);
+            _menu_page_index_private_draw_update(6);
+            _menu_page_index_private_draw_update(7);
+            _menu_page_index_private_draw_update(8);
+            _menu_page_index_private_draw_update(9);
             
             break;
     }
@@ -106,36 +80,113 @@ void menu_page_index_event_process
     return;
 }
 
-void _menu_page_index_value_update(uint16_t panel_id, float val){
-    if (val >= 0){
-        menu_logic_sprintf_float(" %3.0f ", val, g_page_index_tbl[panel_id].content);
-    }else{
-        menu_logic_sprintf_float("-%3.0f ", val, g_page_index_tbl[panel_id].content);
+void _menu_page_index_private_draw_update(uint16_t panel_id){
+    ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_PRIVATE, 
+                g_page_index_tbl[panel_id].content);
+}
+
+void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+    uint8_t startX = panel->x, y = panel->y;
+    char attitude[6];
+    float att_val;
+    int16_t heading;
+    panel_id = panel_id;
+
+    lcd_str_disp(startX, y, (unsigned char*)"R");
+    startX += 6 + 3;
+    memset(attitude, 0, sizeof(attitude));
+    att_val = comm_mav_data_roll_get();
+    sprintf(attitude, "%3.0f@", att_val);    
+    
+    startX += 30 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"P");
+    startX += 6 + 3;
+    memset(attitude, 0, sizeof(attitude));
+    att_val = comm_mav_data_pitch_get();
+    sprintf(attitude, "%3.0f@", att_val);
+
+    startX += 30 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"H");
+    startX += 6 + 3;
+    memset(attitude, 0, sizeof(attitude));
+    heading = comm_mav_data_heading_get();
+    sprintf(attitude, "%d@N", heading);       
+}
+
+uint8_t _menu_page_index_sw_tag_get(uint8_t val){
+    uint8_t tag = '-';
+
+    switch (val){
+        case 1:
+            tag = '{';
+            break;
+        case 2:
+            tag = '}';
+            break;
+        case 0:
+        default:
+            break;
     }
 
-    ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
-        g_page_index_tbl[panel_id].content);
+    return tag;
 }
 
-void _menu_page_index_heading_update(uint16_t panel_id, uint16_t val){
+//
+// |<---35--->|<-4->|<--8-->|<-4->|<--...-->|
+//           SA     0      SB     1   ...
+#define MENU_PAGE_INDEX_SW_VALUE_DRAW(x, y, name, val) \
+    do{\
+        lcd_str_disp(x, y, name);                 \
+        x += 12 + 4;                              \
+        sw[0] = _menu_page_index_sw_tag_get(val); \
+        lcd_str_disp(x, y, sw);                   \
+        startX += 6 + 8;                          \
+    }while(0)
+void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+    uint8_t startX = panel->x, y = panel->y;
+    uint8_t sw[2] = {0, 0};
+    panel_id = panel_id;
 
-    menu_logic_sprintf_float("%3.0f N", val, g_page_index_tbl[panel_id].content);
-    
+    ALL_STICK_INPUT_t input;
+    adc_all_in_val_get(&input);
 
-    ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
-        g_page_index_tbl[panel_id].content);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SA", (uint8_t)input.SW.SWS.SA);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SB", (uint8_t)input.SW.SWS.SB);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SC", (uint8_t)input.SW.SWS.SC);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SD", (uint8_t)input.SW.SWS.SD);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SE", (uint8_t)input.SW.SWS.SE);
 }
 
+void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+    uint8_t startX = panel->x, y = panel->y;
+    panel_id = panel_id;
 
-void _menu_page_index_sw_value_update(uint16_t panel_id, uint8_t* format, uint16_t val){
-    if (val > 9){ val = 0;}
-
-    sprintf(g_page_index_tbl[panel_id].content, format, val);
-    
-    ui_frame_panel_content_set(panel_id, UI_FRAME_PANEL_TYPE_STRING, 
-        g_page_index_tbl[panel_id].content);
+    lcd_str_disp(startX, y, (unsigned char*)"L");
+    startX += 6 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"-.-v");
+    startX += 24 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"--%");
 }
 
+void _menu_page_index_plane_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+    uint8_t startX = panel->x, y = panel->y;
+    panel_id = panel_id;
+
+    lcd_str_disp(startX, y, (unsigned char*)"R");
+    startX += 6 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"--.-v");
+    startX += 30 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"--%");
+}
+
+void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+    uint8_t startX = panel->x, y = panel->y;
+    panel_id = panel_id;
+
+    lcd_str_disp(startX, y, (unsigned char*)"RSSI");
+    startX += 24 + 4;
+    lcd_str_disp(startX, y, (unsigned char*)"--%");    
+}
 
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel){
     if (panel == NULL) return;
@@ -146,20 +197,21 @@ void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU 
     uint8_t type;
 
     switch (panel_id){
-        case 15:
+        case 6:
             type = ROTATE_LU;
             break;
-        case 16:
+        case 7:
             type = ROTATE_LD;
             break;
-        case 17:
+        case 8:
             type = ROTATE_RU;
             break;
-        case 18:
+        case 9:
             type = ROTATE_RD;
             break;
         default:
-            return;
+            return;
+
     }
 
     uint16_t val = input.adcs[type];
