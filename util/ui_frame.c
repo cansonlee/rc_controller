@@ -314,10 +314,13 @@ void ui_task
 
     for (;;)
     {
+        printf("ui task key scan start tick: %d", osKernelSysTick());
+        
         key = keys_read(&key_status);
 
         event = key_to_event_map(key_status, key);
 
+        printf("ui task event start tick: %d", osKernelSysTick());
         fn(UI_FRAME_EVENT_DATA_UPDATE, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
 //		printf("g_uiScreen.cur_page_id=%d @ %s, %s, L%d \r\n",g_uiScreen.cur_page_id, __FILE__, __func__, __LINE__);
         
@@ -326,6 +329,7 @@ void ui_task
             fn(event, g_uiScreen.cur_page_id, g_uiScreen.cur_panel_id);
         }
 
+        printf("ui task draw and lcd update start tick: %d", osKernelSysTick());
         ui_frame_display_update();
         osDelay(50);
     }
