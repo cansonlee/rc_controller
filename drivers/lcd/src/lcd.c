@@ -27,6 +27,9 @@ int _lcd_erase_x2(uint8_t x, uint8_t y);
 int _lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
     int (*x2_fn)(uint8_t, uint8_t),
     int (*fn)(uint8_t, uint8_t));
+inline int _lcd_hline_y_odd_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
+    int (*x2_fn)(uint8_t, uint8_t),
+    int (*fn)(uint8_t, uint8_t));
 
 
 #define LCD_MIRROR_X(x) 211 - (x)
@@ -510,6 +513,29 @@ int _lcd_erase_x2(uint8_t x, uint8_t y){
     return 0;
 }
 
+inline int _lcd_hline_y_odd_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
+    int (*x2_fn)(uint8_t, uint8_t),
+    int (*fn)(uint8_t, uint8_t)){
+
+    uint8_t i, j;
+    uint8_t plot_x2;
+
+    plot_x2 = pen>>1;
+    for (i = 0; i < len; i++){
+        for (j = 0; j < plot_x2; j++){
+            x2_fn(x - i, y + j * 2);
+        }
+
+        if (pen != (plot_x2<<1)){
+            fn(x - i, y + j * 2);
+        }
+    }
+
+    return 0;
+
+}
+        
+
 int _lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
     int (*x2_fn)(uint8_t, uint8_t),
     int (*fn)(uint8_t, uint8_t)){
@@ -527,20 +553,24 @@ int _lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
 
     x = LCD_MIRROR_X(x);
 
-    uint8_t i, j;
-    uint8_t plot_x2 = pen>>1;
-    
-    for (i = 0; i < len; i++){
-        for (j = 0; j < plot_x2; j++){
-            x2_fn(x - i, y + j * 2);
-        }
-
-        if (pen != (plot_x2<<1)){
-            fn(x - i, y + j * 2);
-        }
+    if ((y & 1) == 0){ // y is odd, can accelerate directly
+        return _lcd_hline_y_odd_disp(x, y, len, pen, x2_fn, fn);
     }
 
-    return 0;
+    // y is even
+    if (pen == 0) return 0;
+
+    uint8_t i;
+    for (i = 0; i < len; i++){
+        fn(x - i, y);
+    }
+
+    pen -= 1;
+    if (pen == 0) return 0;
+    
+    y += 1;
+    
+    return _lcd_hline_y_odd_disp(x, y, len, pen, x2_fn, fn);
 }
 
 
