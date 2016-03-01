@@ -6,6 +6,18 @@
 #include "global.h"
 
 
+typedef struct{
+    uint8_t  is_armed;
+    uint8_t  rssi;            // Receive signal strength indicator, 0: 0%, 100: 100%, 255: invalid/unknown.
+    int8_t   battery_remain;  // Remaining battery energy: (0%: 0, 100%: 100), -1: autopilot estimate the remaining battery
+    float    battery_volt;    // Battery voltage
+    int16_t  heading;         // Current heading in degrees, in compass units (0..360, 0=north)
+    uint8_t* flight_mode;     // "stab" "acro" etc. global string address or NULL
+    float    roll;            // degree uint
+    float    pitch;           // degree uint
+}mav_data_get_t;
+
+
 #define _TELEMETRY_MAV_DATA_GET(pBuf, offset)             (*((uint8_t*)(pBuf) + (offset)))
 #define _TELEMETRY_MAV_ARMED_GET(pBuf)                    (_TELEMETRY_MAV_DATA_GET(pBuf, 0) & ((uint8_t)1<<6))
 #define _TELEMETRY_MAV_TYPE_GET(pBuf)                     (_TELEMETRY_MAV_DATA_GET(pBuf, 0) & 0x7F)
@@ -25,13 +37,9 @@
 
 
 void comm_data_send(uint8_t id, void* buf, uint8_t len);
-float comm_mav_data_roll_get(void);
-float comm_mav_data_pitch_get(void);
-float comm_mav_data_alt_get(void);
-int16_t comm_mav_data_heading_get(void);
 
-// return global string address or NULL
-char* comm_mav_data_flightmode_get(void);
+void comm_mav_data_get(mav_data_get_t* data);
+
 
 
 #endif

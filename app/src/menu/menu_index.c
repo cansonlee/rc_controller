@@ -23,16 +23,28 @@ uint8_t _menu_page_index_sw_tag_get(uint8_t val);
 void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
 void _menu_page_index_plane_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
 void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
-void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
-void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
-void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
-void _menu_page_index_private_draw_update(uint16_t panel_id);
-void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
+
 inline uint16_t _menu_page_index_channel_val_limit(uint16_t val);
+void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
+void _menu_page_index_check_rotate_draw_update(uint16_t panel_id, 
+    uint8_t type, ALL_STICK_INPUT_t* input);
+void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
+void _menu_page_index_check_stick_draw_update(uint16_t panel_id, 
+    uint8_t h_type, uint8_t v_type, ALL_STICK_INPUT_t* input);
+void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
 inline void _menu_page_index_stick_point_draw(uint16_t x, uint16_t y);
+
+
+void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
+
+
+void _menu_page_index_private_draw_update(uint16_t panel_id);
+
 
 static uint8_t m_flight_mode[] = "DISARMED";
 ALL_STICK_INPUT_t m_channel_input;
+mav_data_get_t m_mav_data;
+
 
 UI_FRAME_PANEL_STRU g_page_index_tbl[] = 
 {
@@ -66,12 +78,20 @@ void menu_page_index_event_process
     uint16_t panel_id
 )
 {
+    ALL_STICK_INPUT_t input;
+    mav_data_get_t data;
+    
     panel_id = panel_id;
     
     switch(event){
         case UI_FRAME_EVENT_DATA_UPDATE:
 
-            adc_all_in_val_get(&m_channel_input);
+            adc_all_in_val_get(&input);
+            comm_mav_data_get(&data);
+
+            _menu_page_index_check_stick_draw_update(10, STICK_RH, STICK_RV, &input);
+            _menu_page_index_check_stick_draw_update(11, STICK_LH, STICK_LV, &input);
+            
             
             _menu_page_index_private_draw_update(0);
             _menu_page_index_private_draw_update(1);
@@ -113,11 +133,11 @@ void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* pane
     panel_id = panel_id;
 
     MENU_PAGE_INDEX_ATTITUDE_DRAW(startX, y, 
-        (unsigned char*)"R", "%3.0f@", comm_mav_data_roll_get());
+        (unsigned char*)"R", "%3.0f@", m_mav_data.roll);
     MENU_PAGE_INDEX_ATTITUDE_DRAW(startX, y, 
-        (unsigned char*)"P", "%3.0f@", comm_mav_data_pitch_get());
+        (unsigned char*)"P", "%3.0f@", m_mav_data.pitch);
     MENU_PAGE_INDEX_ATTITUDE_DRAW(startX, y, 
-        (unsigned char*)"H", "%d@N", comm_mav_data_heading_get());
+        (unsigned char*)"H", "%d@N", m_mav_data.heading);
 }
 
 uint8_t _menu_page_index_sw_tag_get(uint8_t val){
@@ -214,6 +234,16 @@ inline uint16_t _menu_page_index_channel_val_limit(uint16_t val){
     return val;
 }
 
+void _menu_page_index_check_rotate_draw_update(uint16_t panel_id, 
+    uint8_t type, ALL_STICK_INPUT_t* input){
+    
+    if (m_channel_input.adcs[type] != input->adcs[type]){
+        m_channel_input.adcs[type] = input->adcs[type];
+
+        _menu_page_index_private_draw_update(panel_id);
+    }
+}
+
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel){
     if (panel == NULL) return;
 
@@ -247,6 +277,18 @@ void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU 
     val -= 1000;
     val /= 40;
     lcd_hline_disp(panel->x, panel->y + val, panel->width, 2);
+}
+
+void _menu_page_index_check_stick_draw_update(uint16_t panel_id, 
+    uint8_t h_type, uint8_t v_type, ALL_STICK_INPUT_t* input){
+    
+    if (m_channel_input.adcs[h_type] != input->adcs[h_type]
+        || m_channel_input.adcs[v_type] != input->adcs[v_type]){
+        m_channel_input.adcs[h_type] = input->adcs[h_type];
+        m_channel_input.adcs[v_type] = input->adcs[v_type];
+
+        _menu_page_index_private_draw_update(panel_id);
+    }
 }
 
 void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){

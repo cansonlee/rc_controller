@@ -114,26 +114,18 @@ void mav_data_decode(void* pBuf, mav_data_t* pstData){
     _TELEMETRY_MAV_HUD_ALT_CPY(pBuf, &pstData->alt);            
 }
 
-float comm_mav_data_roll_get(void){
-    return ToDeg(m_mav_data.roll);
-}
+void comm_mav_data_get(mav_data_get_t* data){
 
-float comm_mav_data_pitch_get(void){
-    return ToDeg(m_mav_data.pitch);
-}
+    if (data == NULL) return;
 
-float comm_mav_data_alt_get(void){
-    return ToDeg(m_mav_data.alt);
-}
-
-int16_t comm_mav_data_heading_get(void){
-    return m_mav_data.heading;
-}
-
-
-// return global string address or NULL
-char* comm_mav_data_flightmode_get(void){
-    return m_mav_data.flight_mode;
+    data->is_armed = m_mav_data.is_armed;
+    data->flight_mode = m_mav_data.flight_mode;
+    data->battery_volt = (float)m_mav_data.battery_volt / 1000;
+    data->battery_remain = m_mav_data.battery_remain;
+    data->roll = ToDeg(m_mav_data.roll);
+    data->pitch = ToDeg(m_mav_data.pitch);
+    data->heading = m_mav_data.heading;
+    data->rssi = m_mav_data.rssi;
 }
 
 //////////////end of file/////////////////////////////////////////////////////
