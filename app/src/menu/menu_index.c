@@ -303,7 +303,7 @@ void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
     v_value -= 1000;
     v_value /= 40;
     
-    menu_logic_stick_point_draw(h_value, v_value);
+    menu_logic_stick_point_draw(panel->x + h_value, panel->y + v_value);
     
 }
 
