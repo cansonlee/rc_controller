@@ -27,6 +27,9 @@ void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* pane
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
 void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
 void _menu_page_index_private_draw_update(uint16_t panel_id);
+void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
+inline uint16_t _menu_page_index_channel_val_limit(uint16_t val);
+inline void _menu_page_index_stick_point_draw(uint16_t x, uint16_t y);
 
 static uint8_t m_flight_mode[] = "DISARMED";
 ALL_STICK_INPUT_t m_channel_input;
@@ -48,6 +51,9 @@ UI_FRAME_PANEL_STRU g_page_index_tbl[] =
     {2,    35, 4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
     {205,  3,  4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
     {205,  35, 4,   26, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_rotate_switch_draw},
+
+    {11,   32, 29,  29, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_stick_draw},
+    {172,  32, 29,  29, MENU_PAGE_INDEX_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_index_stick_draw},
 };
 
 uint16_t menu_page_index_tbl_size_get(void){
@@ -98,6 +104,9 @@ void _menu_page_index_private_draw_update(uint16_t panel_id){
         startX += 30 + 4;                       \
     }while(0)
 void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+
+    if (panel == NULL) return;
+    
     uint8_t startX = panel->x, y = panel->y;
     char attitude[6];
 
@@ -141,6 +150,9 @@ uint8_t _menu_page_index_sw_tag_get(uint8_t val){
         startX += 6 + 8;                          \
     }while(0)
 void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+
+    if (panel == NULL) return;
+    
     uint8_t startX = panel->x, y = panel->y;
     uint8_t sw[2] = {0, 0};
     panel_id = panel_id;
@@ -153,6 +165,9 @@ void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* pane
 }
 
 void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+
+    if (panel == NULL) return;
+    
     uint8_t startX = panel->x, y = panel->y;
     panel_id = panel_id;
 
@@ -164,6 +179,9 @@ void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU*
 }
 
 void _menu_page_index_plane_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+
+    if (panel == NULL) return;
+    
     uint8_t startX = panel->x, y = panel->y;
     panel_id = panel_id;
 
@@ -175,12 +193,25 @@ void _menu_page_index_plane_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU*
 }
 
 void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+
+    if (panel == NULL) return;
+    
     uint8_t startX = panel->x, y = panel->y;
     panel_id = panel_id;
 
     lcd_str_disp(startX, y, (unsigned char*)"RSSI");
     startX += 24 + 4;
     lcd_str_disp(startX, y, (unsigned char*)"--%");    
+}
+
+inline uint16_t _menu_page_index_channel_val_limit(uint16_t val){
+    if (val > 2000){        
+        val = 2000;         
+    } else if (val < 1000){ 
+        val = 1000;         
+    }
+
+    return val;
 }
 
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel){
@@ -211,14 +242,61 @@ void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU 
     lcd_clear_rect(panel->x, panel->y, panel->width, panel->height);
     lcd_vline_disp(panel->x + 1, panel->y, panel->height, 2);
 
-    if (val > 2000){
-        val = 2000;
-    } else if (val < 1000){
-        val = 1000;
-    }
+    val = _menu_page_index_channel_val_limit(val);
 
     val -= 1000;
     val /= 40;
     lcd_hline_disp(panel->x, panel->y + val, panel->width, 2);
+}
+
+void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
+
+    uint16_t h_value, v_value;
+
+    if (panel == NULL) return;
+
+    switch(panel_id){
+        case 10:
+            h_value = m_channel_input.adcs[STICK_LH];
+            v_value = m_channel_input.adcs[STICK_LV];
+            break;
+        case 11:
+        default:
+            h_value = m_channel_input.adcs[STICK_RH];
+            v_value = m_channel_input.adcs[STICK_RV];
+            break;
+    }
+
+    h_value = _menu_page_index_channel_val_limit(h_value);
+    v_value = _menu_page_index_channel_val_limit(v_value);
+
+    lcd_clear_rect(panel->x, panel->y, panel->width, panel->height);
+    lcd_hline_disp(panel->x, panel->y + panel->height>>1, panel->width, 1);
+    lcd_vline_disp(panel->x + panel->width>>1, panel->y, panel->height, 1);
+
+    h_value -= 1000;
+    h_value /= 40;
+
+    v_value -= 1000;
+    v_value /= 40;
+    
+    _menu_page_index_stick_point_draw(h_value, v_value);
+    
+}
+
+// center point (x, y)
+inline void _menu_page_index_stick_point_draw(uint16_t x, uint16_t y){
+
+    lcd_hline_erase(x, y, 1, 1);
+    
+    lcd_hline_disp(x - 1, y - 2, 3, 1);
+    lcd_hline_disp(x, y - 1, 1, 1);
+    lcd_hline_disp(x, y + 1, 1, 1);
+    lcd_hline_disp(x - 1, y + 2, 3, 1);
+    
+    lcd_vline_disp(x + 1, y, 1, 1);
+    lcd_vline_disp(x + 2, y - 1, 3, 1);
+    lcd_vline_disp(x - 1, y, 1, 1);
+    lcd_vline_disp(x - 2, y - 1, 3, 1);
 }
 
