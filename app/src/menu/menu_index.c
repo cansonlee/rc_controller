@@ -24,16 +24,9 @@ void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU*
 void _menu_page_index_plane_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
 void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
 
-inline uint16_t _menu_page_index_channel_val_limit(uint16_t val);
 void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
-void _menu_page_index_check_rotate_draw_update(uint16_t panel_id, 
-    uint8_t type, ALL_STICK_INPUT_t* input);
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
-void _menu_page_index_check_stick_draw_update(uint16_t panel_id, 
-    uint8_t h_type, uint8_t v_type, ALL_STICK_INPUT_t* input);
 void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel);
-inline void _menu_page_index_stick_point_draw(uint16_t x, uint16_t y);
-
 
 void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel);
 
@@ -42,7 +35,6 @@ void _menu_page_index_private_draw_update(uint16_t panel_id);
 
 
 static uint8_t m_flight_mode[] = "DISARMED";
-ALL_STICK_INPUT_t m_channel_input;
 mav_data_get_t m_mav_data;
 
 
@@ -89,19 +81,37 @@ void menu_page_index_event_process
             adc_all_in_val_get(&input);
             comm_mav_data_get(&data);
 
-            _menu_page_index_check_stick_draw_update(10, STICK_RH, STICK_RV, &input);
-            _menu_page_index_check_stick_draw_update(11, STICK_LH, STICK_LV, &input);
+            if (menu_logic_sw_val_update(input.SW.sws_value)){
+                _menu_page_index_private_draw_update(3);
+            }
+
+            if (menu_logic_rotate_val_update(ROTATE_LU, input.adcs[ROTATE_LU])){
+                _menu_page_index_private_draw_update(6);
+            }
+            if (menu_logic_rotate_val_update(ROTATE_LD, input.adcs[ROTATE_LU])){
+                _menu_page_index_private_draw_update(7);
+            }
+            if (menu_logic_rotate_val_update(ROTATE_RU, input.adcs[ROTATE_LU])){
+                _menu_page_index_private_draw_update(8);
+            }
+            if (menu_logic_rotate_val_update(ROTATE_RD, input.adcs[ROTATE_LU])){
+                _menu_page_index_private_draw_update(9);
+            }
             
+            if (menu_logic_stick_val_update(STICK_LH, input.adcs[STICK_LH])
+                ||menu_logic_stick_val_update(STICK_LV, input.adcs[STICK_LV])){
+                _menu_page_index_private_draw_update(10);
+            }
+
+            if (menu_logic_stick_val_update(STICK_RH, input.adcs[STICK_RH])
+                ||menu_logic_stick_val_update(STICK_RV, input.adcs[STICK_RV])){
+                _menu_page_index_private_draw_update(11);
+            }
             
             _menu_page_index_private_draw_update(0);
             _menu_page_index_private_draw_update(1);
             _menu_page_index_private_draw_update(2);
-            _menu_page_index_private_draw_update(3);
             _menu_page_index_private_draw_update(5);
-            _menu_page_index_private_draw_update(6);
-            _menu_page_index_private_draw_update(7);
-            _menu_page_index_private_draw_update(8);
-            _menu_page_index_private_draw_update(9);
             
             break;
     }
@@ -177,11 +187,14 @@ void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* pane
     uint8_t sw[2] = {0, 0};
     panel_id = panel_id;
 
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SA", (uint8_t)m_channel_input.SW.SWS.SA);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SB", (uint8_t)m_channel_input.SW.SWS.SB);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SC", (uint8_t)m_channel_input.SW.SWS.SC);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SD", (uint8_t)m_channel_input.SW.SWS.SD);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SE", (uint8_t)m_channel_input.SW.SWS.SE);
+    MISC_SW_VALUE sw_val;
+    sw_val.sws_value = menu_logic_sw_val_get();
+
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SA", sw_val.SWS.SA);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SB", sw_val.SWS.SB);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SC", sw_val.SWS.SC);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SD", sw_val.SWS.SD);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SE", sw_val.SWS.SE);
 }
 
 void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
@@ -224,26 +237,6 @@ void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
     lcd_str_disp(startX, y, (unsigned char*)"--%");    
 }
 
-inline uint16_t _menu_page_index_channel_val_limit(uint16_t val){
-    if (val > 2000){        
-        val = 2000;         
-    } else if (val < 1000){ 
-        val = 1000;         
-    }
-
-    return val;
-}
-
-void _menu_page_index_check_rotate_draw_update(uint16_t panel_id, 
-    uint8_t type, ALL_STICK_INPUT_t* input){
-    
-    if (m_channel_input.adcs[type] != input->adcs[type]){
-        m_channel_input.adcs[type] = input->adcs[type];
-
-        _menu_page_index_private_draw_update(panel_id);
-    }
-}
-
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel){
     if (panel == NULL) return;
 
@@ -267,28 +260,16 @@ void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU 
 
     }
 
-    uint16_t val = m_channel_input.adcs[type];
+    uint16_t val = menu_logic_stick_rotate_val_get(type);
     
     lcd_clear_rect(panel->x, panel->y, panel->width, panel->height);
     lcd_vline_disp(panel->x + 1, panel->y, panel->height, 2);
 
-    val = _menu_page_index_channel_val_limit(val);
+    val = menu_logic_channel_val_limit(val);
 
     val -= 1000;
     val /= 40;
     lcd_hline_disp(panel->x, panel->y + val, panel->width, 2);
-}
-
-void _menu_page_index_check_stick_draw_update(uint16_t panel_id, 
-    uint8_t h_type, uint8_t v_type, ALL_STICK_INPUT_t* input){
-    
-    if (m_channel_input.adcs[h_type] != input->adcs[h_type]
-        || m_channel_input.adcs[v_type] != input->adcs[v_type]){
-        m_channel_input.adcs[h_type] = input->adcs[h_type];
-        m_channel_input.adcs[v_type] = input->adcs[v_type];
-
-        _menu_page_index_private_draw_update(panel_id);
-    }
 }
 
 void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
@@ -299,22 +280,22 @@ void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
 
     switch(panel_id){
         case 10:
-            h_value = m_channel_input.adcs[STICK_LH];
-            v_value = m_channel_input.adcs[STICK_LV];
+            h_value = menu_logic_stick_rotate_val_get(STICK_LH);
+            v_value = menu_logic_stick_rotate_val_get(STICK_LV);
             break;
         case 11:
         default:
-            h_value = m_channel_input.adcs[STICK_RH];
-            v_value = m_channel_input.adcs[STICK_RV];
+            h_value = menu_logic_stick_rotate_val_get(STICK_RH);
+            v_value = menu_logic_stick_rotate_val_get(STICK_RV);
             break;
     }
 
-    h_value = _menu_page_index_channel_val_limit(h_value);
-    v_value = _menu_page_index_channel_val_limit(v_value);
+    h_value = menu_logic_channel_val_limit(h_value);
+    v_value = menu_logic_channel_val_limit(v_value);
 
     lcd_clear_rect(panel->x, panel->y, panel->width, panel->height);
-    lcd_hline_disp(panel->x, panel->y + panel->height>>1, panel->width, 1);
-    lcd_vline_disp(panel->x + panel->width>>1, panel->y, panel->height, 1);
+    lcd_hline_disp(panel->x, panel->y + ((panel->height)>>1), panel->width, 1);
+    lcd_vline_disp(panel->x + ((panel->width)>>1), panel->y, panel->height, 1);
 
     h_value -= 1000;
     h_value /= 40;
@@ -322,23 +303,9 @@ void _menu_page_index_stick_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
     v_value -= 1000;
     v_value /= 40;
     
-    _menu_page_index_stick_point_draw(h_value, v_value);
+    menu_logic_stick_point_draw(h_value, v_value);
     
 }
 
-// center point (x, y)
-inline void _menu_page_index_stick_point_draw(uint16_t x, uint16_t y){
 
-    lcd_hline_erase(x, y, 1, 1);
-    
-    lcd_hline_disp(x - 1, y - 2, 3, 1);
-    lcd_hline_disp(x, y - 1, 1, 1);
-    lcd_hline_disp(x, y + 1, 1, 1);
-    lcd_hline_disp(x - 1, y + 2, 3, 1);
-    
-    lcd_vline_disp(x + 1, y, 1, 1);
-    lcd_vline_disp(x + 2, y - 1, 3, 1);
-    lcd_vline_disp(x - 1, y, 1, 1);
-    lcd_vline_disp(x - 2, y - 1, 3, 1);
-}
 
