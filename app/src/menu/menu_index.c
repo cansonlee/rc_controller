@@ -29,6 +29,7 @@ void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *pane
 void _menu_page_index_private_draw_update(uint16_t panel_id);
 
 static uint8_t m_flight_mode[] = "DISARMED";
+ALL_STICK_INPUT_t m_channel_input;
 
 UI_FRAME_PANEL_STRU g_page_index_tbl[] = 
 {
@@ -63,6 +64,8 @@ void menu_page_index_event_process
     
     switch(event){
         case UI_FRAME_EVENT_DATA_UPDATE:
+
+            adc_all_in_val_get(&m_channel_input);
             
             _menu_page_index_private_draw_update(0);
             _menu_page_index_private_draw_update(1);
@@ -142,14 +145,11 @@ void _menu_page_index_sw_value_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* pane
     uint8_t sw[2] = {0, 0};
     panel_id = panel_id;
 
-    ALL_STICK_INPUT_t input;
-    adc_all_in_val_get(&input);
-
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SA", (uint8_t)input.SW.SWS.SA);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SB", (uint8_t)input.SW.SWS.SB);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SC", (uint8_t)input.SW.SWS.SC);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SD", (uint8_t)input.SW.SWS.SD);
-    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SE", (uint8_t)input.SW.SWS.SE);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SA", (uint8_t)m_channel_input.SW.SWS.SA);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SB", (uint8_t)m_channel_input.SW.SWS.SB);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SC", (uint8_t)m_channel_input.SW.SWS.SC);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SD", (uint8_t)m_channel_input.SW.SWS.SD);
+    MENU_PAGE_INDEX_SW_VALUE_DRAW(startX, y, (unsigned char*)"SE", (uint8_t)m_channel_input.SW.SWS.SE);
 }
 
 void _menu_page_index_local_baterry_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
@@ -186,9 +186,6 @@ void _menu_page_index_rssi_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
 void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU *panel){
     if (panel == NULL) return;
 
-    ALL_STICK_INPUT_t input;
-    adc_all_in_val_get(&input);
-
     uint8_t type;
 
     switch (panel_id){
@@ -209,7 +206,7 @@ void _menu_page_index_rotate_switch_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU 
 
     }
 
-    uint16_t val = input.adcs[type];
+    uint16_t val = m_channel_input.adcs[type];
     
     lcd_clear_rect(panel->x, panel->y, panel->width, panel->height);
     lcd_vline_disp(panel->x + 1, panel->y, panel->height, 2);
