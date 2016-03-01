@@ -85,32 +85,27 @@ void _menu_page_index_private_draw_update(uint16_t panel_id){
                 g_page_index_tbl[panel_id].content);
 }
 
+#define MENU_PAGE_INDEX_ATTITUDE_DRAW(x, y, name, format, val_get_fn) \
+    do{                                         \
+        lcd_str_disp(x, y, name);               \
+        startX += 6 + 3;                        \
+        memset(attitude, 0, sizeof(attitude));  \
+        sprintf(attitude, format, val_get_fn);  \
+        lcd_str_disp(x, y, (unsigned char *)attitude);           \
+        startX += 30 + 4;                       \
+    }while(0)
 void _menu_page_index_attitude_draw(uint16_t panel_id, UI_FRAME_PANEL_STRU* panel){
     uint8_t startX = panel->x, y = panel->y;
     char attitude[6];
-    float att_val;
-    int16_t heading;
+
     panel_id = panel_id;
 
-    lcd_str_disp(startX, y, (unsigned char*)"R");
-    startX += 6 + 3;
-    memset(attitude, 0, sizeof(attitude));
-    att_val = comm_mav_data_roll_get();
-    sprintf(attitude, "%3.0f@", att_val);    
-    
-    startX += 30 + 4;
-    lcd_str_disp(startX, y, (unsigned char*)"P");
-    startX += 6 + 3;
-    memset(attitude, 0, sizeof(attitude));
-    att_val = comm_mav_data_pitch_get();
-    sprintf(attitude, "%3.0f@", att_val);
-
-    startX += 30 + 4;
-    lcd_str_disp(startX, y, (unsigned char*)"H");
-    startX += 6 + 3;
-    memset(attitude, 0, sizeof(attitude));
-    heading = comm_mav_data_heading_get();
-    sprintf(attitude, "%d@N", heading);       
+    MENU_PAGE_INDEX_ATTITUDE_DRAW(startX, y, 
+        (unsigned char*)"R", "%3.0f@", comm_mav_data_roll_get());
+    MENU_PAGE_INDEX_ATTITUDE_DRAW(startX, y, 
+        (unsigned char*)"P", "%3.0f@", comm_mav_data_pitch_get());
+    MENU_PAGE_INDEX_ATTITUDE_DRAW(startX, y, 
+        (unsigned char*)"H", "%d@N", comm_mav_data_heading_get());
 }
 
 uint8_t _menu_page_index_sw_tag_get(uint8_t val){
