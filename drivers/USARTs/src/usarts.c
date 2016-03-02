@@ -268,12 +268,12 @@ void uarts_regist(void)
 	//中断配置
 	USART_ITConfig(USARTdbg,USART_IT_TC,DISABLE);  
 	USART_ITConfig(USARTdbg,USART_IT_RXNE,ENABLE);
-	USART_ITConfig(USARTdbg,USART_IT_IDLE,ENABLE);
+	//USART_ITConfig(USARTdbg,USART_IT_IDLE,ENABLE);
 
 	USART_ClearITPendingBit(USARTdbg, USART_IT_RXNE);
 	//清中断
-	temp = USARTdbg->SR;
-	temp = USARTdbg->DR; //清USART_IT_IDLE标志
+//	temp = USARTdbg->SR;
+//	temp = USARTdbg->DR; //清USART_IT_IDLE标志
 
 	//配置UART中断  
 	NVIC_InitStructure.NVIC_IRQChannel = USARTdbg_IRQn;                         		//通道设置为串口1中断  
@@ -412,10 +412,12 @@ void uarts_sport_irq_handler_callback(void)
     if(USART_GetITStatus(USART_S_PORT, USART_IT_RXNE) != RESET)
 	{
 		USART_ClearITPendingBit(USART_S_PORT, USART_IT_RXNE);
-        *pSport_RxBuffer++ = USART_ReceiveData(USART_S_PORT);
-        g_sport_rx_len++;
+        //*pSport_RxBuffer++ = USART_ReceiveData(USART_S_PORT);
+        //g_sport_rx_len++;
+        uarts_sport_irq_handler_cb_hook(USART_ReceiveData(USART_S_PORT), 1);
 	}
-    
+
+#if 0    
     if(USART_GetITStatus(USART_S_PORT, USART_IT_IDLE) != RESET)
     {
         temp = USART_S_PORT->SR;
@@ -427,6 +429,7 @@ void uarts_sport_irq_handler_callback(void)
         pSport_RxBuffer = &Sport_RxBuffer[0];
         g_sport_rx_len = 0;
     }
+#endif	
 }
 
 
