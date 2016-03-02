@@ -32,7 +32,7 @@ UI_FRAME_PANEL_STRU g_page_cal_tbl[] =
     {6,    12, 200,1,  MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_cal_top_line_draw},
 
     {43,   15, 126,8,  MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "CENTER STICKS/SLIDERS"},
-    {67,   28, 78, 8,  MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "[ENTER] START"},
+    {55,   28, 102,8,  MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_STRING, UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, "  [ENTER] START  "},
     
     {10,   23, 40, 40, MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_cal_stick_draw},
     {162,  23, 40, 40, MENU_PAGE_CAL_ID, UI_FRAME_PANEL_TYPE_PRIVATE,UI_FRAME_PANEL_DISPLAY_STATE_NORMAL, _menu_page_cal_stick_draw},
@@ -67,12 +67,9 @@ void menu_page_cal_event_process
             if (panel_cal_status == 0){
                 panel_cal_status = 1;
                 
-                ui_frame_panel_content_set(3, UI_FRAME_PANEL_TYPE_STRING, "");
+                ui_frame_panel_content_set(3, UI_FRAME_PANEL_TYPE_STRING, "                     ");
                 printf("menu cal start, content should be emtpy %s", g_page_cal_tbl[3].content);
 
-                panel = &g_page_cal_tbl[4];
-                panel->width = 17 * 6;
-                panel->x = (212 - panel->width)>>1;
                 ui_frame_panel_content_set(4, UI_FRAME_PANEL_TYPE_STRING, "[ENTER] WHEN DONE");
                 printf("menu cal start, content should be [ENTER] WHEN DONE %s", g_page_cal_tbl[4].content);
 
@@ -84,10 +81,7 @@ void menu_page_cal_event_process
                 ui_frame_panel_content_set(3, UI_FRAME_PANEL_TYPE_STRING, "CENTER STICKS/SLIDERS");
                 printf("menu cal end, content should be CENTER STICKS/SLIDERS %s", g_page_cal_tbl[3].content);
 
-                panel = &g_page_cal_tbl[4];
-                panel->width = 13 * 6;
-                panel->x = (212 - panel->width)>>1;
-                ui_frame_panel_content_set(4, UI_FRAME_PANEL_TYPE_STRING, "[ENTER] START");
+                ui_frame_panel_content_set(4, UI_FRAME_PANEL_TYPE_STRING, "  [ENTER] START  ");
                 printf("menu cal end, content should be [ENTER] START %s", g_page_cal_tbl[4].content);
 
                 adc_stick_most_val_set_end();
