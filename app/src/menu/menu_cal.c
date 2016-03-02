@@ -68,10 +68,7 @@ void menu_page_cal_event_process
                 panel_cal_status = 1;
                 
                 ui_frame_panel_content_set(3, UI_FRAME_PANEL_TYPE_STRING, "                     ");
-                printf("menu cal start, content should be emtpy %s", g_page_cal_tbl[3].content);
-
                 ui_frame_panel_content_set(4, UI_FRAME_PANEL_TYPE_STRING, "[ENTER] WHEN DONE");
-                printf("menu cal start, content should be [ENTER] WHEN DONE %s", g_page_cal_tbl[4].content);
 
                 adc_stick_cntr_val_set();
                 adc_stick_most_val_set_start();
@@ -79,10 +76,7 @@ void menu_page_cal_event_process
                 panel_cal_status = 1;
 
                 ui_frame_panel_content_set(3, UI_FRAME_PANEL_TYPE_STRING, "CENTER STICKS/SLIDERS");
-                printf("menu cal end, content should be CENTER STICKS/SLIDERS %s", g_page_cal_tbl[3].content);
-
                 ui_frame_panel_content_set(4, UI_FRAME_PANEL_TYPE_STRING, "  [ENTER] START  ");
-                printf("menu cal end, content should be [ENTER] START %s", g_page_cal_tbl[4].content);
 
                 adc_stick_most_val_set_end();
             }
