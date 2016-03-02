@@ -13,15 +13,24 @@ static uint8_t g_LcdWriteBusyFlag;					//LCD写繁忙标志
 static uint8_t g_lcdTxBuff[LCD_TX_BUFF_SIZE];			//LCD写缓存	
 
 
-void lcd_regist(void);
+void _lcd_regist(void);
 int lcd_cmd_write(uint8_t cmd);
-int lcd_cursor_addr_set(uint8_t x, uint8_t y);
+int _lcd_cursor_addr_set(uint8_t x, uint8_t y);
 int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h, uint8_t inv);
-int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv);
+int _lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv);
 int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, uint8_t inv);
-inline uint8_t lcd_is_point_outside(uint8_t x, uint8_t y);
-int lcd_plot(uint8_t x, uint8_t y);
-int lcd_erase(uint8_t x, uint8_t y);
+inline uint8_t _lcd_is_point_outside(uint8_t x, uint8_t y);
+int _lcd_plot(uint8_t x, uint8_t y);
+int _lcd_erase(uint8_t x, uint8_t y);
+int _lcd_plot_x2(uint8_t x, uint8_t y);
+int _lcd_erase_x2(uint8_t x, uint8_t y);
+int _lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
+    int (*x2_fn)(uint8_t, uint8_t),
+    int (*fn)(uint8_t, uint8_t));
+inline int _lcd_hline_y_odd_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
+    int (*x2_fn)(uint8_t, uint8_t),
+    int (*fn)(uint8_t, uint8_t));
+
 
 #define LCD_MIRROR_X(x) 211 - (x)
 #define GET_BUF_POINT_ADDR(x, y) &g_lcdTxBuff[ (y) / 2 * LCD_W + (x) ]
@@ -33,7 +42,7 @@ int lcd_erase(uint8_t x, uint8_t y);
  * @param   NULL
  * @return  null
  ***************************************************************************************************/    
-void lcd_regist(void)
+void _lcd_regist(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	SPI_InitTypeDef  SPI_InitStructure;
@@ -186,7 +195,7 @@ int lcd_data_burst_write(void)
 
 	g_LcdWriteBusyFlag = 1;
 
-	lcd_cursor_addr_set(0,0);		
+	_lcd_cursor_addr_set(0,0);		
 
 	LCD_A0_HIGH();
 	LCD_NCS_LOW();
@@ -246,7 +255,7 @@ int lcd_data_burst_write(void)
  * @param   x,y坐标
  * @return  0 -- success
  ***************************************************************************************************/ 
-int lcd_cursor_addr_set(uint8_t x, uint8_t y)
+int _lcd_cursor_addr_set(uint8_t x, uint8_t y)
 {
 	lcd_cmd_write(x&0x0F);				//Set Column Address LSB CA[3:0]
   	lcd_cmd_write((x>>4)|0x10);			//Set Column Address MSB CA[7:4]
@@ -267,7 +276,7 @@ int lcd_cursor_addr_set(uint8_t x, uint8_t y)
  ***************************************************************************************************/  
 void lcd_init(void)
 {
-	lcd_regist();
+	_lcd_regist();
 
 	
 	//背光开启
@@ -344,9 +353,9 @@ int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h,
             for (row = 0; row < 8; row++){ // 8 rows = 1 line
                 mask = 0x80 >> row;  
                 if ((pat & mask) == 0){
-                    lcd_erase(x-col, y + row);
+                    _lcd_erase(x-col, y + row);
                 }else{
-                    lcd_plot(x-col, y + row);
+                    _lcd_plot(x-col, y + row);
                 }
             }
             pattern++;
@@ -357,10 +366,10 @@ int _lcd_char_disp(uint8_t x, uint8_t y, uint8_t* pattern, uint8_t w, uint8_t h,
     return 0;
 }
 
-int lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
+int _lcd_char_disp_5x7(uint8_t x, uint8_t y, uint8_t c, uint8_t inv){
     uint8_t* pattern;
     
-    if ( c > 'z'){
+    if ( c > '~'){
         c = ' ';
     }
     
@@ -417,7 +426,7 @@ int _lcd_str_disp_5x7(unsigned char x,unsigned char y,unsigned char *pCharStr, u
 	{
 		IF_PTR_IS_NULL_RET_NULLPTR_ERR(pCharStr);
 		
-		lcd_char_disp_5x7(x, y, *pCharStr, inv);
+		_lcd_char_disp_5x7(x, y, *pCharStr, inv);
 		x += FONT_5x7_WIDTH;
 		if(x>=(LCD_W-1))													// 写满自动跳转下一行
 		{
@@ -456,13 +465,13 @@ void lcd_clean(void)
 	memset(g_lcdTxBuff, 0, sizeof(g_lcdTxBuff));
 }
 
-inline uint8_t lcd_is_point_outside(uint8_t x, uint8_t y){
+inline uint8_t _lcd_is_point_outside(uint8_t x, uint8_t y){
     return (x>=LCD_W || y>=LCD_H);
 }
 
-int lcd_plot(uint8_t x, uint8_t y){
+int _lcd_plot(uint8_t x, uint8_t y){
 
-    IF_CONDITION_TURE_RET_PARAM_ERR(lcd_is_point_outside(x, y));
+    IF_CONDITION_TURE_RET_PARAM_ERR(_lcd_is_point_outside(x, y));
 
     uint8_t *p = GET_BUF_POINT_ADDR(x, y);
 
@@ -471,15 +480,125 @@ int lcd_plot(uint8_t x, uint8_t y){
     return 0;
 }
 
-int lcd_erase(uint8_t x, uint8_t y){
+int _lcd_plot_x2(uint8_t x, uint8_t y){
+    IF_CONDITION_TURE_RET_PARAM_ERR(_lcd_is_point_outside(x, y));
+
+    uint8_t *p = GET_BUF_POINT_ADDR(x, y);
+
+    *p = 0xFF;
+
+    return 0;
+}
+
+
+int _lcd_erase(uint8_t x, uint8_t y){
     
-    IF_CONDITION_TURE_RET_PARAM_ERR(lcd_is_point_outside(x, y));
+    IF_CONDITION_TURE_RET_PARAM_ERR(_lcd_is_point_outside(x, y));
     
     uint8_t *p = GET_BUF_POINT_ADDR(x, y);
 
     *p = (y & 1) ? (*p & 0xF0) : (*p & 0x0F);
 
     return 0;
+}
+
+int _lcd_erase_x2(uint8_t x, uint8_t y){
+    
+    IF_CONDITION_TURE_RET_PARAM_ERR(_lcd_is_point_outside(x, y));
+    
+    uint8_t *p = GET_BUF_POINT_ADDR(x, y);
+
+    *p = 0x00;
+
+    return 0;
+}
+
+inline int _lcd_hline_y_odd_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
+    int (*x2_fn)(uint8_t, uint8_t),
+    int (*fn)(uint8_t, uint8_t)){
+
+    uint8_t i, j;
+    uint8_t plot_x2;
+
+    plot_x2 = pen>>1;
+    for (i = 0; i < len; i++){
+        for (j = 0; j < plot_x2; j++){
+            x2_fn(x - i, y + j * 2);
+        }
+
+        if (pen != (plot_x2<<1)){
+            fn(x - i, y + j * 2);
+        }
+    }
+
+    return 0;
+
+}
+        
+
+int _lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen,
+    int (*x2_fn)(uint8_t, uint8_t),
+    int (*fn)(uint8_t, uint8_t)){
+    
+    IF_CONDITION_TURE_RET_PARAM_ERR(_lcd_is_point_outside(x, y));
+    IF_CONDITION_TURE_RET_PARAM_ERR(x2_fn == NULL || fn == NULL);
+
+    if (x + len > LCD_W){
+        len = LCD_W - x;
+    }
+
+    if (y + pen > LCD_H){
+        pen = LCD_H - y;
+    }
+
+    x = LCD_MIRROR_X(x);
+
+    if ((y & 1) == 0){ // y is odd, can accelerate directly
+        return _lcd_hline_y_odd_disp(x, y, len, pen, x2_fn, fn);
+    }
+
+    // y is even
+    if (pen == 0) return 0;
+
+    uint8_t i;
+    for (i = 0; i < len; i++){
+        fn(x - i, y);
+    }
+
+    pen -= 1;
+    if (pen == 0) return 0;
+    
+    y += 1;
+    
+    return _lcd_hline_y_odd_disp(x, y, len, pen, x2_fn, fn);
+}
+
+
+
+int lcd_hline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen){
+    return _lcd_hline_disp(x, y, len, pen, _lcd_plot_x2, _lcd_plot);
+}
+
+int lcd_hline_erase(uint8_t x, uint8_t y, uint8_t len, uint8_t pen){
+    return _lcd_hline_disp(x, y, len, pen, _lcd_erase_x2, _lcd_erase);
+}
+
+
+int lcd_vline_disp(uint8_t x, uint8_t y, uint8_t len, uint8_t pen){
+    return lcd_hline_disp(x, y, pen, len);
+}
+
+int lcd_vline_erase(uint8_t x, uint8_t y, uint8_t len, uint8_t pen){
+    return lcd_hline_erase(x, y, pen, len);
+}
+
+
+int lcd_fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h){
+    return lcd_hline_disp(x, y, w, h);
+}
+
+int lcd_clear_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h){
+    return lcd_hline_erase(x, y, w, h);
 }
 
 

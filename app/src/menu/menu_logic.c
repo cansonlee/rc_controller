@@ -4,6 +4,8 @@
 #include "ui_frame.h"
 #include "menu_logic.h"
 
+#include "ADCs.h"
+
 extern UI_FRAME_PANEL_STRU g_page_splash_tbl[];
 extern uint16_t menu_page_splash_tbl_size_get(void);
 extern void menu_page_splash_event_process(uint32_t, uint16_t);
@@ -39,7 +41,7 @@ typedef struct menu_logic_t{
 
 MENU_LOGIC_STRU g_menu_logic_tbl[] = { // correspond to page id
     {MENU_PAGE_INDEX_ID, g_page_splash_tbl,
-        menu_page_splash_event_process, menu_page_index_tbl_size_get},
+        menu_page_splash_event_process, menu_page_splash_tbl_size_get},
     {MENU_PAGE_CHANNEL_ID, g_page_index_tbl, 
         menu_page_index_event_process, menu_page_index_tbl_size_get},
     {MENU_PAGE_CHANNEL_SW_ID, g_page_channel_tbl, 
@@ -55,6 +57,8 @@ MENU_LOGIC_STRU g_menu_logic_tbl[] = { // correspond to page id
 
 #define IS_PAGE_ID_VALID(page_id) \
     ((page_id) < sizeof(g_menu_logic_tbl) / sizeof(g_menu_logic_tbl[0]))
+
+ALL_STICK_INPUT_t m_channel_input;
 
 EVENT_FN menu_logic_event_proc_get(uint16_t page_id){
     if (IS_PAGE_ID_VALID(page_id)){
@@ -127,6 +131,41 @@ void menu_logic_sprintf_float(char* format, float val, char* out){
     sprintf(out, format, val);
 
     return;
+}
+
+uint8_t menu_logic_rotate_val_update(uint8_t type, uint16_t val){
+    
+    return menu_logic_stick_val_update(type, val);
+}
+
+uint8_t menu_logic_stick_val_update(uint8_t type, uint16_t val){
+    
+    if (m_channel_input.adcs[type] != val){
+        m_channel_input.adcs[type] = val;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+uint8_t menu_logic_sw_val_update(uint16_t val){
+
+    if (m_channel_input.SW.sws_value != val){
+        m_channel_input.SW.sws_value = val;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+uint16_t menu_logic_sw_val_get(void){
+    return m_channel_input.SW.sws_value;
+}
+
+uint16_t menu_logic_stick_rotate_val_get(uint8_t type){
+    return m_channel_input.adcs[type];
 }
 
 
